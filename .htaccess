@@ -1,0 +1,89 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Impede o acesso direto ao arquivo .env
+<FilesMatch "^\.env$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Impede o acesso direto a outros arquivos sensíveis (por exemplo, configurações específicas)
+<FilesMatch "(^\.env|^\.gitignore|^\.gitattributes|\.gitmodules|^\.git$|^LICENSE|^composer\.(json|lock)$|^phpunit\.xml|\.editorconfig|^CONTRIBUTING\.md|\.styleci\.yml|^code_of_conduct\.md$|^readme\.(md|txt)$|^SECURITY\.md$|^changelog\.(md|txt)$|^UPGRADING\.md$|^upgrade\.md$|^UPGRADE\-(FROM\-(.*)\-(TO|THROUGH)\-(.*)\.(md|txt))$)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Impede o acesso direto a diretórios sensíveis
+<DirectoryMatch "^\.git$|^node_modules$|^vendor$|^storage$|^bootstrap$">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
+
+# Protege arquivos de configuração adicionais
+<FilesMatch "(^\.htaccess|^\.htpasswd|^web\.config|^nginx\.conf$)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Bloqueia listagem de diretórios
+Options -Indexes
+
+# Protege arquivos de log e outros arquivos de configuração
+<FilesMatch "(^error_log$|^access_log$|^laravel.log$|^\.DS_Store$|^\.project$|^\.buildpath$|^\.idea$|^\.settings$|^\.classpath$|^\.project$)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Definições de segurança adicionais
+<IfModule mod_headers.c>
+    # Evita o cliquejacking
+    Header always append X-Frame-Options DENY
+    # Protege contra ataques de XSS
+    Header set X-XSS-Protection "1; mode=block"
+    # Protege contra ataques de injeção de conteúdo
+    Header set X-Content-Type-Options nosniff
+    # Habilita HSTS (HTTP Strict Transport Security)
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# Define permissões estritas de CORS (Cross-Origin Resource Sharing)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "https://example.com"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "X-Requested-With, Content-Type, Authorization"
+</IfModule>
+
+# Rejeita pedidos HTTP TRACE
+TraceEnable off
+
+# Configurações de proteção adicionais para Apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Rejeita pedidos HTTP que contenham strings maliciosas
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*object.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} union.*select.*\(.*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} ?(.*\.)?.{1,}[.*]?["'].*$ [NC]
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>

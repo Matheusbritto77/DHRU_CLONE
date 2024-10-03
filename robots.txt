@@ -1,0 +1,30 @@
+# Bloquear todos os web crawlers de acessar áreas sensíveis ou irrelevantes
+User-agent: *
+Disallow: /private/
+Disallow: /storage/
+Disallow: /vendor/
+Disallow: /node_modules/
+Disallow: /config/
+Disallow: /resources/
+Disallow: /bootstrap/
+Disallow: /database/
+Disallow: /public/
+Disallow: /tests/
+Disallow: /server.php
+Disallow: /artisan
+Disallow: /composer.json
+Disallow: /composer.lock
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /phpunit.xml
+Disallow: /readme.md
+Disallow: /.env
+Disallow: /.htaccess
+Disallow: /.git/
+Disallow: /.gitignore
+
+# Permitir acesso a todas as outras áreas do site
+Allow: /
+
+# Sitemaps
+Sitemap: https://brserver.tech/sitemap.xml
