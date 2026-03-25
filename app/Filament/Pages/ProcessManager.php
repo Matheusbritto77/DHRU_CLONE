@@ -16,6 +16,11 @@ class ProcessManager extends Page
     protected static ?string $title = 'Gerenciador de Processos (BUN)';
     protected static string $view = 'filament.pages.process-manager';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('view-admin') ?? false;
+    }
+
     public array $processes = [];
 
     public function mount()
@@ -41,7 +46,7 @@ class ProcessManager extends Page
         }
     }
 
-    public function callAction(string $name, string $action)
+    public function triggerProcessAction(string $name, string $action)
     {
         try {
             $response = Http::post('http://localhost:8080/api/control', [
@@ -72,16 +77,16 @@ class ProcessManager extends Page
 
     public function start(string $name)
     {
-        $this->callAction($name, 'start');
+        $this->triggerProcessAction($name, 'start');
     }
 
     public function stop(string $name)
     {
-        $this->callAction($name, 'stop');
+        $this->triggerProcessAction($name, 'stop');
     }
 
     public function restart(string $name)
     {
-        $this->callAction($name, 'restart');
+        $this->triggerProcessAction($name, 'restart');
     }
 }

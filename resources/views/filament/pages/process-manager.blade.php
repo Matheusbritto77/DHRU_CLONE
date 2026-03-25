@@ -33,19 +33,19 @@
                     <div class="flex gap-2">
                         @if($process['status'] === 'stopped')
                             <x-filament::button 
-                                wire:click="callAction('{{ $process['key'] }}', 'start')"
+                                wire:click="triggerProcessAction('{{ $process['key'] }}', 'start')"
                                 color="success" size="sm" class="flex-1 rounded-xl">
                                 Iniciar
                             </x-filament::button>
                         @else
                             <x-filament::button 
-                                wire:click="callAction('{{ $process['key'] }}', 'stop')"
+                                wire:click="triggerProcessAction('{{ $process['key'] }}', 'stop')"
                                 color="danger" size="sm" class="flex-1 rounded-xl">
                                 Parar
                             </x-filament::button>
                             
                             <x-filament::button 
-                                wire:click="callAction('{{ $process['key'] }}', 'restart')"
+                                wire:click="triggerProcessAction('{{ $process['key'] }}', 'restart')"
                                 color="warning" size="sm" class="rounded-xl">
                                 <x-heroicon-m-arrow-path class="w-4 h-4" />
                             </x-filament::button>
