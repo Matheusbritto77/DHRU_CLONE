@@ -70,7 +70,18 @@ class ProcessManager extends Page
         }
     }
 
-    public function start(string $name) => $this->callAction($name, 'start');
-    public function stop(string $name) => $this->callAction($name, 'stop');
-    public function restart(string $name) => $this->callAction($name, 'restart');
+    public function start(string $name)
+    {
+        $this->callAction($name, 'start');
+    }
+
+    public function stop(string $name)
+    {
+        $this->callAction($name, 'stop');
+    }
+
+    public function restart(string $name)
+    {
+        $this->callAction($name, 'restart');
+    }
 }
