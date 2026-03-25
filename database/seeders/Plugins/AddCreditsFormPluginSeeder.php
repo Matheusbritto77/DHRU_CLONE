@@ -20,7 +20,7 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
             'default_settings' => [
                 'title' => 'Recarga da conta',
                 'usd_label' => 'Créditos em USD',
-                'total_label' => 'Total estimado na sua moeda',
+                'total_label' => 'Total do pagamento',
                 'payment_label' => 'Metodo de pagamento',
                 'submit_text' => 'Ir para pagamento',
                 'service_fee_rate' => '0.00',
@@ -33,6 +33,13 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
         $defaultGateway = $paymentGateways[0]['slug'] ?? 'payment-gerencianet-pix';
         $defaultGatewayData = collect($paymentGateways)->firstWhere('slug', $defaultGateway);
         $userCurrency = strtoupper(auth()->user()?->preferred_currency ?: 'USD');
+        $currencyRates = \App\Models\Currency::query()
+            ->where('is_active', true)
+            ->get(['code', 'exchange_rate'])
+            ->mapWithKeys(function ($currency) {
+                return [strtoupper($currency->code) => (float) $currency->exchange_rate];
+            })
+            ->all();
     @endphp
     <div class="max-w-6xl mx-auto">
         <div class="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
@@ -79,16 +86,8 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
                 <p class="text-[11px] uppercase tracking-[0.3em] theme-muted">Resumo</p>
                 <div class="mt-6 space-y-4">
                     <div class="rounded-[24px] p-5 theme-soft">
-                        <p class="text-sm font-semibold theme-text">Conversao usada</p>
-                        <p id="credit-conversion-hint" class="mt-2 text-sm leading-7 theme-muted">O total sera calculado dinamicamente na moeda do usuario e na moeda de cobranca do gateway.</p>
-                    </div>
-                    <div class="rounded-[24px] p-5 theme-soft">
-                        <p class="text-sm font-semibold theme-text">Taxa operacional</p>
-                        <p class="mt-2 text-sm leading-7 theme-muted">{{ number_format(((float) $settings['service_fee_rate']) * 100, 0) }}% sobre o valor convertido.</p>
-                    </div>
-                    <div class="rounded-[24px] p-5 theme-soft">
-                        <p class="text-sm font-semibold theme-text">Moeda do gateway</p>
-                        <p id="credit-gateway-currency" class="mt-2 text-sm leading-7 theme-muted">{{ $defaultGatewayData['checkout_currency'] ?? 'USD' }}</p>
+                        <p class="text-sm font-semibold theme-text">Taxas</p>
+                        <p id="credit-conversion-hint" class="mt-2 text-sm leading-7 theme-muted">Sem taxas adicionais para este gateway.</p>
                     </div>
                     <div class="rounded-[24px] p-5 theme-soft">
                         <p class="text-sm font-semibold theme-text">Deposito minimo</p>
@@ -106,11 +105,10 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
     const creditTotal = document.getElementById('credit-total');
     const creditFormBuilder = document.getElementById('credit-form-builder');
     const creditPaymentMethod = document.getElementById('credit-payment-method');
-    const creditGatewayCurrency = document.getElementById('credit-gateway-currency');
     const creditConversionHint = document.getElementById('credit-conversion-hint');
     const creditServiceFeeRate = {{ (float) $settings['service_fee_rate'] }};
     const creditMinimumUsd = {{ (float) $settings['minimum_usd'] }};
-    const currencyRates = @json(\App\Models\Currency::query()->where('is_active', true)->pluck('exchange_rate', 'code')->mapWithKeys(fn ($rate, $code) => [strtoupper($code) => (float) $rate])->all());
+    const currencyRates = @json($currencyRates);
     const userCurrency = '{{ $userCurrency }}';
 
     function getRate(code) {
@@ -140,10 +138,22 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
         const subtotal = convertFromUsd(amountUsd, gatewayCurrency);
         const totalGateway = subtotal + (subtotal * creditServiceFeeRate) + (subtotal * gatewayFeeRate) + gatewayFixedFee;
         const totalUser = convertBetween(totalGateway, gatewayCurrency, userCurrency);
+        const totalFeeRate = creditServiceFeeRate + gatewayFeeRate;
+        const feeParts = [];
 
         creditTotal.value = totalUser > 0 ? `${totalUser.toFixed(2)} ${userCurrency}` : '';
-        creditGatewayCurrency.textContent = gatewayCurrency;
-        creditConversionHint.textContent = `1 USD = ${getRate(gatewayCurrency).toFixed(4)} ${gatewayCurrency}`;
+
+        if (totalFeeRate > 0) {
+            feeParts.push(`${(totalFeeRate * 100).toFixed(2)}%`);
+        }
+
+        if (gatewayFixedFee > 0) {
+            feeParts.push(`${gatewayFixedFee.toFixed(2)} ${gatewayCurrency}`);
+        }
+
+        creditConversionHint.textContent = feeParts.length
+            ? `Taxas aplicadas: ${feeParts.join(' + ')}`
+            : 'Sem taxas adicionais para este gateway.';
     }
 
     creditAmountUsd.addEventListener('input', calculateCreditTotal);
