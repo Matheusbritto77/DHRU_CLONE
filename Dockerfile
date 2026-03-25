@@ -17,7 +17,8 @@ RUN addgroup -S $GROUP && adduser -S $USER -G $GROUP
 WORKDIR /var/www/html
 
 # Install system dependencies and PHP extensions
-RUN apk add --no-cache \
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
     nginx \
     supervisor \
     libpng-dev \
