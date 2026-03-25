@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Currency;
 use App\Models\Plugin;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -47,11 +48,19 @@ class RegistrationSettings
     public static function get(): array
     {
         $plugin = Plugin::where('slug', self::PLUGIN_SLUG)->first();
-
-        return array_replace_recursive(
+        $settings = array_replace_recursive(
             self::defaults(),
             $plugin?->default_settings ?? [],
+            $plugin?->adminSettings?->settings ?? [],
         );
+
+        $currencyOptions = self::getCurrencyOptions();
+
+        if ($currencyOptions !== []) {
+            $settings['currency_options'] = array_keys($currencyOptions);
+        }
+
+        return $settings;
     }
 
     public static function getCustomFields(): array
@@ -112,6 +121,23 @@ class RegistrationSettings
 
     public static function getCurrencyOptions(): array
     {
+        $activeCurrencies = Currency::query()
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['code', 'name'])
+            ->mapWithKeys(fn (Currency $currency) => [
+                strtoupper($currency->code) => sprintf(
+                    '%s - %s',
+                    strtoupper($currency->code),
+                    $currency->name ?: strtoupper($currency->code),
+                ),
+            ])
+            ->all();
+
+        if ($activeCurrencies !== []) {
+            return $activeCurrencies;
+        }
+
         return CurrencyCatalogService::getFormattedOptions();
     }
 }
