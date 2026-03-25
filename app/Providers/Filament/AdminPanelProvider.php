@@ -18,6 +18,7 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -91,21 +92,25 @@ class AdminPanelProvider extends PanelProvider
      */
     protected function getSupportNavigationItems(): array
     {
-        return [
+        $items = [
             NavigationItem::make('Pulse')
                 ->group('Suporte')
                 ->icon('heroicon-o-chart-bar-square')
                 ->url('/admin/pulse', shouldOpenInNewTab: true),
-            
-            NavigationItem::make('Horizon')
-                ->group('Suporte')
-                ->icon('heroicon-o-queue-list')
-                ->url('/admin/horizon', shouldOpenInNewTab: true),
-            
+
             NavigationItem::make('Logs')
                 ->group('Suporte')
                 ->icon('heroicon-o-document-text')
                 ->url('/admin/log-viewer', shouldOpenInNewTab: true),
         ];
+
+        if (Config::get('queue.default') === 'redis') {
+            $items[] = NavigationItem::make('Horizon')
+                ->group('Suporte')
+                ->icon('heroicon-o-queue-list')
+                ->url('/admin/horizon', shouldOpenInNewTab: true);
+        }
+
+        return $items;
     }
 }

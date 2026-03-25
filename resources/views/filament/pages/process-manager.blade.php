@@ -1,5 +1,23 @@
 <x-filament-panels::page>
     <div wire:poll.5s="refreshData">
+        <div class="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex flex-col gap-2">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    Fila ativa: <span class="font-mono">{{ $queueConnection }}</span>
+                </p>
+
+                @if ($horizonAvailable)
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        O Horizon pode gerenciar os workers porque a fila atual usa Redis.
+                    </p>
+                @else
+                    <p class="text-sm text-amber-700 dark:text-amber-400">
+                        O Horizon exige Redis. Com a fila em <span class="font-mono">{{ $queueConnection }}</span>, este projeto continua usando <span class="font-mono">queue:work</span> no manager.
+                    </p>
+                @endif
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($processes as $process)
                 <div class="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md">
@@ -56,7 +74,7 @@
                 <div class="col-span-full py-12 text-center text-gray-500">
                     <x-heroicon-o-signal-slash class="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p class="text-lg font-medium">Servidor de Gerenciamento Offline</p>
-                    <p class="text-sm mt-1">Certifique-se que o comando <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-primary-500">bun run manager.ts</code> está rodando.</p>
+                    <p class="text-sm mt-1">No container, confirme se o processo <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-primary-500">bun-manager</code> foi iniciado pelo Supervisor.</p>
                 </div>
             @endforelse
         </div>

@@ -13,7 +13,7 @@ class ProcessManager extends Page
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
     protected static ?string $navigationGroup = 'Suporte';
     protected static ?string $navigationLabel = 'Gerenciador de Processos';
-    protected static ?string $title = 'Gerenciador de Processos (BUN)';
+    protected static ?string $title = 'Gerenciador de Processos';
     protected static string $view = 'filament.pages.process-manager';
 
     public static function canAccess(): bool
@@ -22,9 +22,13 @@ class ProcessManager extends Page
     }
 
     public array $processes = [];
+    public string $queueConnection = '';
+    public bool $horizonAvailable = false;
 
     public function mount()
     {
+        $this->queueConnection = (string) config('queue.default', 'sync');
+        $this->horizonAvailable = $this->queueConnection === 'redis';
         $this->refreshData();
     }
 
