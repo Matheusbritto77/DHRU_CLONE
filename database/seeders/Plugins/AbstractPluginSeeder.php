@@ -11,7 +11,14 @@ abstract class AbstractPluginSeeder extends Seeder
     {
         $plugin = Plugin::updateOrCreate(
             ['slug' => $this->slug()],
-            $this->definition()
+            array_replace([
+                'version' => '1.0.0',
+                'is_system' => false,
+                'is_active' => true,
+                'has_admin_panel' => false,
+                'admin_panel_location' => 'admin',
+                'blade_template' => '<div></div>',
+            ], $this->definition())
         );
 
         $this->afterUpsert($plugin);

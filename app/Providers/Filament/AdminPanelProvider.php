@@ -71,7 +71,7 @@ class AdminPanelProvider extends PanelProvider
 
         return Plugin::query()
             ->where('has_admin_panel', true)
-            ->whereIn('admin_panel_location', ['plugin', 'both'])
+            ->whereIn('admin_panel_location', ['admin', 'plugin', 'both'])
             ->orderBy('name')
             ->get()
             ->map(fn (Plugin $plugin): NavigationItem => NavigationItem::make($plugin->getAdminNavigationLabel())
