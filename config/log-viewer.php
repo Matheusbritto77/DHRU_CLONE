@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'route_path' => 'admin/log-viewer',
+    'route_path' => '_internal/log-viewer',
 
     /*
     |--------------------------------------------------------------------------

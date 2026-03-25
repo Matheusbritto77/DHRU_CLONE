@@ -7,11 +7,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Collection;
-use Laravel\Horizon\Contracts\JobRepository;
-use Laravel\Horizon\Contracts\MasterSupervisorRepository;
-use Laravel\Horizon\Contracts\MetricsRepository;
-use Laravel\Horizon\Contracts\WorkloadRepository;
+use App\Support\Monitoring\HorizonMonitoringService;
 
 class HorizonDashboard extends Page
 {
@@ -74,36 +70,12 @@ class HorizonDashboard extends Page
     public function refreshData(): void
     {
         try {
-            /** @var JobRepository $jobs */
-            $jobs = app(JobRepository::class);
-            /** @var MetricsRepository $metrics */
-            $metrics = app(MetricsRepository::class);
-            /** @var MasterSupervisorRepository $masters */
-            $masters = app(MasterSupervisorRepository::class);
-            /** @var WorkloadRepository $workload */
-            $workload = app(WorkloadRepository::class);
-
-            $this->stats = [
-                'status' => blank($masters->all()) ? 'inactive' : 'running',
-                'jobs_per_minute' => $metrics->jobsProcessedPerMinute(),
-                'recent_jobs' => $jobs->countRecent(),
-                'failed_jobs' => $jobs->countRecentlyFailed(),
-                'throughput' => $metrics->throughput(),
-            ];
-
-            $this->masters = collect($masters->all())
-                ->map(fn ($master) => [
-                    'name' => $master->name,
-                    'environment' => $master->environment,
-                    'pid' => $master->pid,
-                    'status' => $master->status,
-                    'supervisors' => collect($master->supervisors)->implode(', '),
-                ])
-                ->all();
-
-            $this->workload = collect($workload->get())->all();
-            $this->recentJobs = $this->normalizeJobs($jobs->getRecent());
-            $this->failedJobs = $this->normalizeJobs($jobs->getFailed());
+            $snapshot = app(HorizonMonitoringService::class)->snapshot();
+            $this->stats = $snapshot['stats'];
+            $this->masters = $snapshot['masters'];
+            $this->workload = $snapshot['workload'];
+            $this->recentJobs = $snapshot['recent_jobs'];
+            $this->failedJobs = $snapshot['failed_jobs'];
             $this->error = null;
         } catch (Exception $exception) {
             $this->error = $exception->getMessage();
@@ -112,22 +84,6 @@ class HorizonDashboard extends Page
             $this->recentJobs = [];
             $this->failedJobs = [];
         }
-    }
-
-    protected function normalizeJobs(Collection $jobs): array
-    {
-        return $jobs
-            ->take(10)
-            ->map(fn ($job) => [
-                'id' => $job->id ?? null,
-                'name' => class_basename($job->name ?? 'Unknown'),
-                'queue' => $job->queue ?? '-',
-                'status' => $job->status ?? '-',
-                'completed_at' => $job->completed_at ?? null,
-                'failed_at' => $job->failed_at ?? null,
-            ])
-            ->values()
-            ->all();
     }
 
     protected function runHorizonCommand(string $command): void

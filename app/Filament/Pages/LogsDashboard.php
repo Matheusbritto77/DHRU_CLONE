@@ -9,8 +9,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
+use App\Support\Monitoring\LogMonitoringService;
 
 class LogsDashboard extends Page implements HasTable
 {
@@ -27,6 +26,7 @@ class LogsDashboard extends Page implements HasTable
     public array $files = [];
     public array $entries = [];
     public string $selectedFile = '';
+    public ?array $selectedEntry = null;
 
     public static function canAccess(): bool
     {
@@ -50,49 +50,11 @@ class LogsDashboard extends Page implements HasTable
 
     public function refreshData(): void
     {
-        $paths = collect(File::glob(storage_path('logs/*.log')))
-            ->sortDesc()
-            ->values();
-
-        $this->files = $paths
-            ->map(fn (string $path) => [
-                'path' => $path,
-                'name' => basename($path),
-                'size_kb' => round(File::size($path) / 1024, 2),
-                'updated_at' => date('Y-m-d H:i:s', File::lastModified($path)),
-            ])
-            ->all();
-
-        $activeLog = $this->selectedFile && File::exists($this->selectedFile)
-            ? $this->selectedFile
-            : $paths->first();
-
-        $this->selectedFile = $activeLog ?? '';
-        $lines = $activeLog ? file($activeLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
-        $tail = collect(array_slice($lines ?: [], -80))->reverse()->values();
-
-        $this->entries = $tail->map(function (string $line) {
-            $level = 'info';
-
-            foreach (['EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'] as $candidate) {
-                if (Str::contains($line, ".{$candidate}:")) {
-                    $level = strtolower($candidate);
-                    break;
-                }
-            }
-
-            return [
-                'level' => $level,
-                'message' => $line,
-            ];
-        })->all();
-
-        $this->stats = [
-            'files' => count($this->files),
-            'latest_file' => $this->files[0]['name'] ?? '-',
-            'errors' => collect($this->entries)->filter(fn ($entry) => in_array($entry['level'], ['error', 'critical', 'alert', 'emergency'], true))->count(),
-            'warnings' => collect($this->entries)->where('level', 'warning')->count(),
-        ];
+        $service = app(LogMonitoringService::class);
+        $this->files = $service->listFiles();
+        $this->selectedFile = $service->resolveSelectedFile($this->selectedFile, $this->files);
+        $this->entries = $service->tailEntries($this->selectedFile);
+        $this->stats = $service->stats($this->files, $this->entries);
     }
 
     public function table(Table $table): Table
@@ -106,6 +68,7 @@ class LogsDashboard extends Page implements HasTable
                     ->searchable(),
                 Tables\Columns\TextColumn::make('message')
                     ->searchable()
+                    ->limit(140)
                     ->wrap(),
             ])
             ->filters([
@@ -120,6 +83,14 @@ class LogsDashboard extends Page implements HasTable
                         'info' => 'info',
                         'debug' => 'debug',
                     ]),
+            ])
+            ->actions([
+                Tables\Actions\Action::make('details')
+                    ->label('Detalhes')
+                    ->icon('heroicon-o-eye')
+                    ->action(function (array $record): void {
+                        $this->selectedEntry = $record;
+                    }),
             ])
             ->defaultSort('id', 'desc')
             ->paginated([10, 25, 50]);

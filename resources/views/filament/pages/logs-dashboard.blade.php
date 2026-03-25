@@ -46,5 +46,21 @@
                 </div>
             </div>
         </div>
+
+        @if ($selectedEntry)
+            <div class="fixed inset-0 z-50 flex justify-end bg-black/40">
+                <div class="h-full w-full max-w-3xl overflow-y-auto bg-white p-6 shadow-2xl dark:bg-gray-900">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">Detalhe do log</h3>
+                            <p class="text-sm text-gray-500">{{ $selectedEntry['level'] ?? 'info' }}</p>
+                        </div>
+                        <x-filament::button color="gray" wire:click="$set('selectedEntry', null)">Fechar</x-filament::button>
+                    </div>
+
+                    <pre class="mt-6 whitespace-pre-wrap break-words rounded-2xl border bg-gray-50 p-4 text-xs dark:bg-gray-950">{{ $selectedEntry['message'] ?? '' }}</pre>
+                </div>
+            </div>
+        @endif
     </div>
 </x-filament-panels::page>

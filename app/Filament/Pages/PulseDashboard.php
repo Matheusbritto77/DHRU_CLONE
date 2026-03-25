@@ -3,7 +3,7 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\DB;
+use App\Support\Monitoring\PulseMonitoringService;
 
 class PulseDashboard extends Page
 {
@@ -16,8 +16,10 @@ class PulseDashboard extends Page
 
     public array $stats = [];
     public array $entryTypes = [];
-    public array $latestEntries = [];
-    public array $queueAggregates = [];
+    public array $slowJobsCards = [];
+    public array $slowRequestsCards = [];
+    public array $exceptions = [];
+    public array $outgoingRequests = [];
 
     public static function canAccess(): bool
     {
@@ -31,53 +33,12 @@ class PulseDashboard extends Page
 
     public function refreshData(): void
     {
-        $this->stats = [
-            'entries' => DB::table('pulse_entries')->count(),
-            'aggregates' => DB::table('pulse_aggregates')->count(),
-            'exceptions' => DB::table('pulse_entries')->where('type', 'exception')->count(),
-            'slow_jobs' => DB::table('pulse_entries')->where('type', 'slow_job')->count(),
-        ];
-
-        $this->entryTypes = DB::table('pulse_entries')
-            ->select('type', DB::raw('COUNT(*) as total'))
-            ->groupBy('type')
-            ->orderByDesc('total')
-            ->limit(8)
-            ->get()
-            ->map(fn ($row) => [
-                'type' => $row->type,
-                'total' => (int) $row->total,
-            ])
-            ->all();
-
-        $this->latestEntries = DB::table('pulse_entries')
-            ->select(['id', 'timestamp', 'type', 'key', 'value'])
-            ->orderByDesc('id')
-            ->limit(10)
-            ->get()
-            ->map(fn ($row) => [
-                'id' => $row->id,
-                'recorded_at' => date('Y-m-d H:i:s', (int) $row->timestamp),
-                'type' => $row->type,
-                'key' => $row->key,
-                'value' => $row->value,
-            ])
-            ->all();
-
-        $this->queueAggregates = DB::table('pulse_aggregates')
-            ->select(['bucket', 'type', 'key', 'aggregate', 'value', 'count'])
-            ->whereIn('type', ['queued', 'processing', 'processed', 'slow_job'])
-            ->orderByDesc('id')
-            ->limit(10)
-            ->get()
-            ->map(fn ($row) => [
-                'bucket_at' => date('Y-m-d H:i:s', (int) $row->bucket),
-                'type' => $row->type,
-                'key' => $row->key,
-                'aggregate' => $row->aggregate,
-                'value' => $row->value,
-                'count' => $row->count,
-            ])
-            ->all();
+        $snapshot = app(PulseMonitoringService::class)->snapshot();
+        $this->stats = $snapshot['stats'];
+        $this->entryTypes = $snapshot['entry_types'];
+        $this->slowJobsCards = $snapshot['slow_jobs_cards'];
+        $this->slowRequestsCards = $snapshot['slow_requests_cards'];
+        $this->exceptions = $snapshot['exceptions'];
+        $this->outgoingRequests = $snapshot['outgoing_requests'];
     }
 }

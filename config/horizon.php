@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'path' => env('HORIZON_PATH', 'admin/horizon'),
+    'path' => env('HORIZON_PATH', '_internal/horizon'),
 
     /*
     |--------------------------------------------------------------------------
