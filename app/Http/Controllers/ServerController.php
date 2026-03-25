@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Dhru\Services\DhruCatalogListingService;
+use App\Models\Page;
 use App\Models\server_services;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-
 use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Log;
@@ -26,54 +26,21 @@ class ServerController extends Controller
  */
 public function showServerServices(Request $request)
 {
-   $filePath = public_path('list/list.json');
+    $filteredServices = app(DhruCatalogListingService::class)->getServicesForType('SERVER');
 
-        if (!File::exists($filePath)) {
-            return response()->json(['error' => 'Arquivo de serviços não encontrado.'], 404);
-        }
+    $page = Page::where('slug', 'server-services')->where('is_active', true)->firstOrFail();
 
-        $fileContents = File::get($filePath);
-        $json = json_decode($fileContents, true);
+    $blocks = $page->blocks()
+        ->where('is_visible', true)
+        ->with('plugin')
+        ->orderBy('sort_order')
+        ->get();
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['error' => 'Erro ao decodificar o arquivo JSON.'], 500);
-        }
+    $pluginContext = [
+        'filteredServices' => $filteredServices,
+    ];
 
-        $services = $json['SUCCESS'];
-
-        $filteredServices = collect($services)
-            ->flatMap(function ($serviceGroup) {
-                return collect($serviceGroup['LIST'])
-                    ->filter(function ($group) {
-                        return $group['GROUPTYPE'] === 'SERVER' && isset($group['SERVICES']);
-                    })
-                ->flatMap(function ($group) {
-                    return collect($group['SERVICES'])
-                        ->map(function ($service) use ($group) {
-                            // Filtrar apenas os campos desejados e incluir o nome do grupo
-                            $customFieldnames = collect($service['Requires.Custom'] ?? [])
-                                ->pluck('fieldname')
-                                ->implode(', ');
-
-                            return [
-                                'GROUPNAME' => $group['GROUPNAME'],
-                                'SERVICENAME' => $service['SERVICENAME'],
-                                'TIME' => $service['TIME'],
-                                'CREDIT' => $service['CREDIT'],
-                                'MINQNT' => $service['MINQNT'] ?? '',
-                                'MAXQNT' => $service['MAXQNT'] ?? '',
-                                'SERVICEID' => $service['SERVICEID'] ?? '',
-                                'fieldname' => $customFieldnames,
-                            ];
-                        })
-                        ->toArray();
-                })
-                ->toArray();
-        })
-        ->toArray();
-
-    // Retorna os dados filtrados como JSON
-    return view('Server', compact('filteredServices'));
+    return view('page-builder', compact('page', 'blocks', 'pluginContext'));
 }
 
 
@@ -85,20 +52,28 @@ public function showServerServices(Request $request)
 public function showIMEIHistory()
 {
     try {
-        // Obtém o ID do usuário logado
         $userId = Auth::id();
         Log::info('ID do usuário logado:', ['userId' => $userId]);
 
-        // Busca as ordens de IMEI relacionadas ao usuário logado
         $imeiOrders = server_services::where('user_id', $userId)
-            ->orderByDesc('created_at') // Ordena por data de criação decrescente
-            ->paginate(10); // Paginação com 10 registros por página
+            ->orderByDesc('created_at')
+            ->paginate(10);
 
-        // Verifica se as ordens foram recuperadas corretamente
         Log::info('Ordens de IMEI recuperadas:', ['imeiOrders' => $imeiOrders]);
 
-        // Retorna a visão com os dados das ordens
-        return view('server_history', compact('imeiOrders'));
+        $page = Page::where('slug', 'server-history')->where('is_active', true)->firstOrFail();
+
+        $blocks = $page->blocks()
+            ->where('is_visible', true)
+            ->with('plugin')
+            ->orderBy('sort_order')
+            ->get();
+
+        $pluginContext = [
+            'serverOrders' => $imeiOrders,
+        ];
+
+        return view('page-builder', compact('page', 'blocks', 'pluginContext'));
 
     } catch (\Exception $e) {
         Log::error('Erro ao recuperar histórico de IMEI:', ['exception' => $e]);

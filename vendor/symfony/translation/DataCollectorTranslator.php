@@ -12,34 +12,29 @@
 namespace Symfony\Component\Translation;
 
 use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
-use Symfony\Component\Translation\Exception\InvalidArgumentException;
+use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @author Abdellatif Ait boudad <a.aitboudad@gmail.com>
- *
- * @final since Symfony 7.1
  */
-class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface, WarmableInterface
+final class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface, WarmableInterface, ResetInterface
 {
     public const MESSAGE_DEFINED = 0;
     public const MESSAGE_MISSING = 1;
     public const MESSAGE_EQUALS_FALLBACK = 2;
 
-    private TranslatorInterface $translator;
     private array $messages = [];
 
-    /**
-     * @param TranslatorInterface&TranslatorBagInterface&LocaleAwareInterface $translator
-     */
-    public function __construct(TranslatorInterface $translator)
-    {
-        if (!$translator instanceof TranslatorBagInterface || !$translator instanceof LocaleAwareInterface) {
-            throw new InvalidArgumentException(sprintf('The Translator "%s" must implement TranslatorInterface, TranslatorBagInterface and LocaleAwareInterface.', get_debug_type($translator)));
-        }
+    public function __construct(
+        private TranslatorInterface&TranslatorBagInterface&LocaleAwareInterface $translator,
+    ) {
+    }
 
-        $this->translator = $translator;
+    public function reset(): void
+    {
+        $this->messages = [];
     }
 
     public function trans(?string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
@@ -73,7 +68,7 @@ class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInter
     public function warmUp(string $cacheDir, ?string $buildDir = null): array
     {
         if ($this->translator instanceof WarmableInterface) {
-            return (array) $this->translator->warmUp($cacheDir, $buildDir);
+            return $this->translator->warmUp($cacheDir, $buildDir);
         }
 
         return [];
@@ -86,6 +81,15 @@ class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInter
     {
         if ($this->translator instanceof Translator || method_exists($this->translator, 'getFallbackLocales')) {
             return $this->translator->getFallbackLocales();
+        }
+
+        return [];
+    }
+
+    public function getGlobalParameters(): array
+    {
+        if ($this->translator instanceof Translator || method_exists($this->translator, 'getGlobalParameters')) {
+            return $this->translator->getGlobalParameters();
         }
 
         return [];

@@ -14,7 +14,7 @@ use function sprintf;
 use PHPUnit\Event\InvalidArgumentException;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
@@ -80,9 +80,9 @@ final readonly class Duration
 
         return sprintf(
             '%02d:%02d:%02d.%09d',
-            $hours,
-            $minutes,
-            $seconds,
+            (int) $hours,
+            (int) $minutes,
+            (int) $seconds,
             $this->nanoseconds(),
         );
     }

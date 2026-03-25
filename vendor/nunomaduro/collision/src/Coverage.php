@@ -36,7 +36,7 @@ final class Coverage
      */
     public static function isAvailable(): bool
     {
-        $runtime = new Runtime();
+        $runtime = new Runtime;
 
         if (! $runtime->canCollectCodeCoverage()) {
             return false;
@@ -60,14 +60,14 @@ final class Coverage
      */
     public static function usingXdebug(): bool
     {
-        return (new Runtime())->hasXdebug();
+        return (new Runtime)->hasXdebug();
     }
 
     /**
      * Reports the code coverage report to the
      * console and returns the result in float.
      */
-    public static function report(OutputInterface $output): float
+    public static function report(OutputInterface $output, bool $hideFullCoverage = false): float
     {
         if (! file_exists($reportPath = self::getPath())) {
             if (self::usingXdebug()) {
@@ -109,6 +109,10 @@ final class Coverage
             $percentage = $file->numberOfExecutableLines() === 0
                 ? '100.0'
                 : number_format($file->percentageOfExecutedLines()->asFloat(), 1, '.', '');
+
+            if ($percentage === '100.0' && $hideFullCoverage) {
+                continue;
+            }
 
             $uncoveredLines = '';
 

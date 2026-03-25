@@ -25,8 +25,6 @@ class WildfireFormatter extends NormalizerFormatter
 {
     /**
      * @param string|null $dateFormat The format of the timestamp: one supported by DateTime::format
-     *
-     * @throws \RuntimeException If the function json_encode does not exist
      */
     public function __construct(?string $dateFormat = null)
     {
@@ -85,7 +83,7 @@ class WildfireFormatter extends NormalizerFormatter
             $message = reset($message);
         }
 
-        if (\is_array($message) && isset($message['context']['table'])) {
+        if (is_array($message) && isset($message['context']) && \is_array($message['context']) && isset($message['context']['table'])) {
             $type  = 'TABLE';
             $label = $record->channel .': '. $record->message;
             $message = $message['context']['table'];

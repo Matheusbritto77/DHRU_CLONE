@@ -10,9 +10,11 @@
 namespace PHPUnit\Framework;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
 interface IsolatedTestRunner
 {
-    public function run(TestCase $test, bool $runEntireClass, bool $preserveGlobalState): void;
+    public function run(TestCase $test, bool $runEntireClass, bool $preserveGlobalState, bool $requiresXdebug): void;
 }

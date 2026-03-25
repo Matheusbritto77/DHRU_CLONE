@@ -15,6 +15,7 @@ use App\Http\Controllers\GerencianetPixController;
 use Gerencianet\Exception\GerencianetException;
 use Gerencianet\Gerencianet;
 use App\Http\Controllers\CreditController;
+use App\Http\Controllers\AddCreditsController;
 
 
 use Livewire\Livewire;
@@ -43,14 +44,25 @@ Livewire::setUpdateRoute(function ($handle) {
 
 
 Route::get('/', function () {
-    return view('welcome');
-    
-    
+    $page = \App\Models\Page::where('slug', 'welcome')->where('is_active', true)->first();
+
+    if (!$page) {
+        abort(404, 'Página não encontrada.');
+    }
+
+    $blocks = $page->blocks()
+        ->where('is_visible', true)
+        ->with('plugin')
+        ->orderBy('sort_order')
+        ->get();
+
+    return view('welcome', compact('page', 'blocks'));
 });
 
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    // Rota delegada para o painel Filament v3
+    // Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     
     
     
@@ -113,20 +125,18 @@ Route::get('/search-imei-services', [IMEIController::class, 'search'])->name('se
 
 
 
-// Rota para lidar com o envio do formulário de Serial Number
-Route::post('/submit-serial-number', [ApiController::class, 'enviarOrdemSerialNumber'])->name('submit_serial_number');
-Route::get('/get-imei-order/{orderID}', [ApiController::class, 'getIMEIOrder'])->name('get_imei_order');
-Route::get('/check-imei-orders', [ApiController::class, 'checkAndUpdateIMEIOrdersStatus'])->name('check.imei.orders');
-Route::get('/check-server', [ApiController::class, 'server'])->name('check.server.orders');
-Route::get('/imei-history', [IMEIController::class, 'showIMEIHistory'])->name('imei.history');
-
-
-Route::get('/server-services', [ServerController::class, 'showServerServices'])->name('server-services');
-
-Route::post('/tes-api', [ApiController::class, 'enviarOrdemAPIserver'])->name('test.api');
-Route::post('/submit-server', [ApiController::class, 'enviarOrdemServer'])->name('submit_server');
-
-Route::get('/Server-history', [ServerController::class, 'showIMEIHistory'])->name('Server.history');
+Route::middleware(['auth'])->group(function () {
+    // Rota para lidar com o envio do formulário de Serial Number
+    Route::post('/submit-serial-number', [ApiController::class, 'enviarOrdemSerialNumber'])->name('submit_serial_number');
+    Route::get('/get-imei-order/{orderID}', [ApiController::class, 'getIMEIOrder'])->name('get_imei_order');
+    Route::get('/check-imei-orders', [ApiController::class, 'checkAndUpdateIMEIOrdersStatus'])->name('check.imei.orders');
+    Route::get('/check-server', [ApiController::class, 'server'])->name('check.server.orders');
+    Route::get('/imei-history', [IMEIController::class, 'showIMEIHistory'])->name('imei.history');
+    Route::get('/server-services', [ServerController::class, 'showServerServices'])->name('server-services');
+    Route::post('/tes-api', [ApiController::class, 'enviarOrdemAPIserver'])->name('test.api');
+    Route::post('/submit-server', [ApiController::class, 'enviarOrdemServer'])->name('submit_server');
+    Route::get('/Server-history', [ServerController::class, 'showIMEIHistory'])->name('Server.history');
+});
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -137,9 +147,6 @@ Route::post('/pix', [GerencianetPixController::class, 'generateQRCode'])->name('
 Route::get('/pix/status', [GerencianetPixController::class, 'consultarPixRecebidosUltimos30Minutos']);
 // routes/web.php
 // Define a rota que retorna diretamente a view
-Route::get('/add-credits', function () {
-    return view('Creditos');
-})->name('add-credits');
-
+Route::get('/add-credits', [AddCreditsController::class, 'index'])->name('add-credits');
 
 

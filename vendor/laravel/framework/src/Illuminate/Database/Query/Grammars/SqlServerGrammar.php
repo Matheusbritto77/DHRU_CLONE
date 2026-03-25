@@ -5,7 +5,9 @@ namespace Illuminate\Database\Query\Grammars;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinLateralClause;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class SqlServerGrammar extends Grammar
 {
@@ -109,12 +111,22 @@ class SqlServerGrammar extends Grammar
      * @param  \Illuminate\Database\Query\Builder  $query
      * @param  \Illuminate\Database\Query\IndexHint  $indexHint
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     protected function compileIndexHint(Builder $query, $indexHint)
     {
-        return $indexHint->type === 'force'
-                    ? "with (index({$indexHint->index}))"
-                    : '';
+        if ($indexHint->type !== 'force') {
+            return '';
+        }
+
+        $index = $indexHint->index;
+
+        if (! preg_match('/^[a-zA-Z0-9_$]+$/', $index)) {
+            throw new InvalidArgumentException('Index name contains invalid characters.');
+        }
+
+        return "with (index([{$index}]))";
     }
 
     /**
@@ -131,6 +143,18 @@ class SqlServerGrammar extends Grammar
         $operator = str_replace('?', '??', $where['operator']);
 
         return '('.$this->wrap($where['column']).' '.$operator.' '.$value.') != 0';
+    }
+
+    /**
+     * Compile a "where null safe equals" clause.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereNullSafeEquals(Builder $query, $where)
+    {
+        return 'exists (select '.$this->wrap($where['column']).' intersect select '.$this->parameter($where['value']).')';
     }
 
     /**
@@ -280,8 +304,8 @@ class SqlServerGrammar extends Grammar
         $sql = parent::compileDeleteWithoutJoins($query, $table, $where);
 
         return ! is_null($query->limit) && $query->limit > 0 && $query->offset <= 0
-                        ? Str::replaceFirst('delete', 'delete top ('.$query->limit.')', $sql)
-                        : $sql;
+            ? Str::replaceFirst('delete', 'delete top ('.$query->limit.')', $sql)
+            : $sql;
     }
 
     /**
@@ -414,24 +438,24 @@ class SqlServerGrammar extends Grammar
      */
     public function compileUpsert(Builder $query, array $values, array $uniqueBy, array $update)
     {
-        $columns = $this->columnize(array_keys(reset($values)));
+        $columns = $this->columnize(array_keys(array_first($values)));
 
         $sql = 'merge '.$this->wrapTable($query->from).' ';
 
-        $parameters = collect($values)->map(function ($record) {
-            return '('.$this->parameterize($record).')';
-        })->implode(', ');
+        $parameters = (new Collection($values))
+            ->map(fn ($record) => '('.$this->parameterize($record).')')
+            ->implode(', ');
 
         $sql .= 'using (values '.$parameters.') '.$this->wrapTable('laravel_source').' ('.$columns.') ';
 
-        $on = collect($uniqueBy)->map(function ($column) use ($query) {
-            return $this->wrap('laravel_source.'.$column).' = '.$this->wrap($query->from.'.'.$column);
-        })->implode(' and ');
+        $on = (new Collection($uniqueBy))
+            ->map(fn ($column) => $this->wrap('laravel_source.'.$column).' = '.$this->wrap($query->from.'.'.$column))
+            ->implode(' and ');
 
         $sql .= 'on '.$on.' ';
 
         if ($update) {
-            $update = collect($update)->map(function ($value, $key) {
+            $update = (new Collection($update))->map(function ($value, $key) {
                 return is_numeric($key)
                     ? $this->wrap($value).' = '.$this->wrap('laravel_source.'.$value)
                     : $this->wrap($key).' = '.$this->parameter($value);
@@ -452,9 +476,12 @@ class SqlServerGrammar extends Grammar
      * @param  array  $values
      * @return array
      */
+    #[\Override]
     public function prepareBindingsForUpdate(array $bindings, array $values)
     {
         $cleanBindings = Arr::except($bindings, 'select');
+
+        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
 
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))
@@ -495,6 +522,16 @@ class SqlServerGrammar extends Grammar
     public function compileSavepointRollBack($name)
     {
         return 'ROLLBACK TRANSACTION '.$name;
+    }
+
+    /**
+     * Compile a query to get the number of open connections for a database.
+     *
+     * @return string
+     */
+    public function compileThreadCount()
+    {
+        return 'select count(*) Value from sys.dm_exec_sessions where status = N\'running\'';
     }
 
     /**
@@ -546,12 +583,13 @@ class SqlServerGrammar extends Grammar
      * Wrap a table in keyword identifiers.
      *
      * @param  \Illuminate\Contracts\Database\Query\Expression|string  $table
+     * @param  string|null  $prefix
      * @return string
      */
-    public function wrapTable($table)
+    public function wrapTable($table, $prefix = null)
     {
         if (! $this->isExpression($table)) {
-            return $this->wrapTableValuedFunction(parent::wrapTable($table));
+            return $this->wrapTableValuedFunction(parent::wrapTable($table, $prefix));
         }
 
         return $this->getValue($table);

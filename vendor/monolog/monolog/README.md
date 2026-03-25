@@ -1,4 +1,4 @@
-![Monolog](logo.jpg)
+<p align="center"><img src="logo.jpg" alt="Monolog" width="400"></p>
 
 # Monolog - Logging for PHP [![Continuous Integration](https://github.com/Seldaek/monolog/workflows/Continuous%20Integration/badge.svg?branch=main)](https://github.com/Seldaek/monolog/actions)
 
@@ -106,7 +106,6 @@ Bugs and feature request are tracked on [GitHub](https://github.com/Seldaek/mono
 - [Lumen](http://lumen.laravel.com/) comes out of the box with Monolog.
 - [PPI](https://github.com/ppi/framework) comes out of the box with Monolog.
 - [CakePHP](http://cakephp.org/) is usable with Monolog via the [cakephp-monolog](https://github.com/jadb/cakephp-monolog) plugin.
-- [Slim](http://www.slimframework.com/) is usable with Monolog via the [Slim-Monolog](https://github.com/Flynsarmy/Slim-Monolog) log writer.
 - [XOOPS 2.6](http://xoops.org/) comes out of the box with Monolog.
 - [Aura.Web_Project](https://github.com/auraphp/Aura.Web_Project) comes out of the box with Monolog.
 - [Nette Framework](http://nette.org/en/) is usable with Monolog via the [contributte/monolog](https://github.com/contributte/monolog) or [orisai/nette-monolog](https://github.com/orisai/nette-monolog) extensions.
@@ -120,6 +119,7 @@ Bugs and feature request are tracked on [GitHub](https://github.com/Seldaek/mono
 - [Aimeos ecommerce framework](https://aimeos.org/) is usable with Monolog via the [ai-monolog](https://github.com/aimeos/ai-monolog) extension.
 - [Magento](https://magento.com/) comes out of the box with Monolog.
 - [Spiral Framework](https://spiral.dev) comes out of the box with Monolog bridge.
+- [WebFramework](https://web-framework.com/) comes out of the box with Monolog.
 
 ### Author
 

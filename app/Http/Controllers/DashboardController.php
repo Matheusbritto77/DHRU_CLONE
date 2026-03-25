@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use App\Models\ImeiService;
-use App\Models\server_services;
-use Illuminate\Http\Request;
+use App\Models\Page;
 
 class DashboardController extends Controller
 {
@@ -16,32 +13,14 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $user = Auth::user();
+        $page = Page::where('slug', 'dashboard')->where('is_active', true)->firstOrFail();
 
-        // Total de crédito atual do usuário logado
-        $totalCredit = $user->credit;
+        $blocks = $page->blocks()
+            ->where('is_visible', true)
+            ->with('plugin')
+            ->orderBy('sort_order')
+            ->get();
 
-        // Total de ordens de sucesso (status = 4) e rejeitadas (status = 3) em imei_services
-        $imeiSuccessCount = ImeiService::where('user_id', $user->id)->where('status', 4)->count();
-        $imeiRejectedCount = ImeiService::where('user_id', $user->id)->where('status', 3)->count();
-
-        // Total de ordens de sucesso (status = 4) e rejeitadas (status = 3) em server_services
-        $serverSuccessCount = server_services::where('user_id', $user->id)->where('status', 4)->count();
-        $serverRejectedCount = server_services::where('user_id', $user->id)->where('status', 3)->count();
-
-        // Total de ordens enviadas em imei_services e server_services
-        $totalIMEIOrders = ImeiService::where('user_id', $user->id)->count();
-        $totalServerOrders = server_services::where('user_id', $user->id)->count();
-
-        // Passa os dados para a view do dashboard
-        return view('dashboard', [
-            'totalCredit' => $totalCredit,
-            'imeiSuccessCount' => $imeiSuccessCount,
-            'imeiRejectedCount' => $imeiRejectedCount,
-            'serverSuccessCount' => $serverSuccessCount,
-            'serverRejectedCount' => $serverRejectedCount,
-            'totalIMEIOrders' => $totalIMEIOrders,
-            'totalServerOrders' => $totalServerOrders,
-        ]);
+        return view('page-builder', compact('page', 'blocks'));
     }
 }

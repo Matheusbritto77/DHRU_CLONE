@@ -115,7 +115,7 @@ class InstallCommand extends Command implements PromptsForMissingInput
                 $this->removeComposerDevPackages(['phpunit/phpunit']);
             }
 
-            if (! $this->requireComposerDevPackages(['pestphp/pest:^2.0', 'pestphp/pest-plugin-laravel:^2.0'])) {
+            if (! $this->requireComposerDevPackages(['pestphp/pest', 'pestphp/pest-plugin-laravel'])) {
                 return 1;
             }
 
@@ -150,7 +150,7 @@ class InstallCommand extends Command implements PromptsForMissingInput
     protected function installLivewireStack()
     {
         // Install Livewire...
-        if (! $this->requireComposerPackages('livewire/livewire:^3.0')) {
+        if (! $this->requireComposerPackages('livewire/livewire:^3.6.4')) {
             return false;
         }
 
@@ -196,7 +196,13 @@ class InstallCommand extends Command implements PromptsForMissingInput
         copy(__DIR__.'/../../stubs/resources/markdown/policy.md', resource_path('markdown/policy.md'));
 
         // Service Providers...
-        copy(__DIR__.'/../../stubs/app/Providers/JetstreamServiceProvider.php', app_path('Providers/JetstreamServiceProvider.php'));
+        copy(__DIR__.'/../../stubs/app/Providers/JetstreamServiceProvider.php', $provider = app_path('Providers/JetstreamServiceProvider.php'));
+
+        $this->replaceInFile([
+            PHP_EOL.'use Illuminate\Support\Facades\Vite;',
+            PHP_EOL.PHP_EOL.'        Vite::prefetch(concurrency: 3);',
+        ], '', $provider);
+
         ServiceProvider::addProviderToBootstrapFile('App\Providers\JetstreamServiceProvider');
 
         // Models...
@@ -267,6 +273,8 @@ class InstallCommand extends Command implements PromptsForMissingInput
             $this->runCommands(['pnpm install', 'pnpm run build']);
         } elseif (file_exists(base_path('yarn.lock'))) {
             $this->runCommands(['yarn install', 'yarn run build']);
+        } elseif (file_exists(base_path('bun.lockb'))) {
+            $this->runCommands(['bun install', 'bun run build']);
         } else {
             $this->runCommands(['npm install', 'npm run build']);
         }
@@ -336,7 +344,7 @@ EOF;
     protected function installInertiaStack()
     {
         // Install Inertia...
-        if (! $this->requireComposerPackages('inertiajs/inertia-laravel:^1.0', 'tightenco/ziggy:^2.0')) {
+        if (! $this->requireComposerPackages('inertiajs/inertia-laravel:^2.0', 'tightenco/ziggy:^2.0')) {
             return false;
         }
 
@@ -347,10 +355,10 @@ EOF;
         // Install NPM packages...
         $this->updateNodePackages(function ($packages) {
             return [
-                '@inertiajs/vue3' => '^1.0.14',
+                '@inertiajs/vue3' => '^2.0',
                 '@tailwindcss/forms' => '^0.5.7',
                 '@tailwindcss/typography' => '^0.5.10',
-                '@vitejs/plugin-vue' => '^5.0.0',
+                '@vitejs/plugin-vue' => '^6.0.4',
                 'autoprefixer' => '^10.4.16',
                 'postcss' => '^8.4.32',
                 'tailwindcss' => '^3.4.0',
@@ -471,6 +479,8 @@ EOF;
             $this->runCommands(['pnpm install', 'pnpm run build']);
         } elseif (file_exists(base_path('yarn.lock'))) {
             $this->runCommands(['yarn install', 'yarn run build']);
+        } elseif (file_exists(base_path('bun.lockb'))) {
+            $this->runCommands(['bun install', 'bun run build']);
         } else {
             $this->runCommands(['npm install', 'npm run build']);
         }
@@ -599,13 +609,19 @@ EOF;
             ->whenNotEmpty(function ($names) use ($bootstrapApp, $group, $modifier) {
                 $names = $names->map(fn ($name) => "$name")->implode(','.PHP_EOL.'            ');
 
-                $bootstrapApp = str_replace(
+                $stubs = [
                     '->withMiddleware(function (Middleware $middleware) {',
-                    '->withMiddleware(function (Middleware $middleware) {'
+                    '->withMiddleware(function (Middleware $middleware): void {',
+                ];
+
+                $bootstrapApp = str_replace(
+                    $stubs,
+                    collect($stubs)->transform(fn ($stub) => $stub
                         .PHP_EOL."        \$middleware->$group($modifier: ["
                         .PHP_EOL."            $names,"
                         .PHP_EOL.'        ]);'
-                        .PHP_EOL,
+                        .PHP_EOL
+                    )->all(),
                     $bootstrapApp,
                 );
 
@@ -766,8 +782,8 @@ EOF;
     /**
      * Replace a given string within a given file.
      *
-     * @param  string  $search
      * @param  string  $replace
+     * @param  string|array  $search
      * @param  string  $path
      * @return void
      */
@@ -796,6 +812,10 @@ EOF;
      */
     protected function phpBinary()
     {
+        if (function_exists('Illuminate\Support\php_binary')) {
+            return \Illuminate\Support\php_binary();
+        }
+
         return (new PhpExecutableFinder())->find(false) ?: 'php';
     }
 
@@ -865,7 +885,7 @@ EOF;
         $input->setOption('pest', select(
             label: 'Which testing framework do you prefer?',
             options: ['Pest', 'PHPUnit'],
-            default: $this->isUsingPest() ? 'Pest' : 'PHPUnit',
+            default: 'Pest',
         ) === 'Pest');
     }
 

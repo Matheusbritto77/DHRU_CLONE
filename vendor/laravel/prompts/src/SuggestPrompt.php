@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 
 class SuggestPrompt extends Prompt
 {
+    use Concerns\HasInfo;
     use Concerns\Scrolling;
     use Concerns\Truncation;
     use Concerns\TypedValue;
@@ -39,6 +40,8 @@ class SuggestPrompt extends Prompt
         public bool|string $required = false,
         public mixed $validate = null,
         public string $hint = '',
+        public ?Closure $transform = null,
+        public string|Closure $info = '',
     ) {
         $this->options = $options instanceof Collection ? $options->all() : $options;
 
@@ -59,6 +62,18 @@ class SuggestPrompt extends Prompt
         });
 
         $this->trackTypedValue($default, ignore: fn ($key) => Key::oneOf([Key::HOME, Key::END, Key::CTRL_A, Key::CTRL_E], $key) && $this->highlighted !== null);
+    }
+
+    /**
+     * Get the value of the highlighted option.
+     */
+    public function highlightedValue(): ?string
+    {
+        if ($this->highlighted === null) {
+            return null;
+        }
+
+        return $this->matches()[$this->highlighted] ?? null;
     }
 
     /**

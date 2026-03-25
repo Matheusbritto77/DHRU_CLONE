@@ -12,7 +12,7 @@ namespace PHPUnit\Event\Telemetry;
 use function sprintf;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
@@ -79,7 +79,7 @@ final readonly class Info
             '[%s / %s] [%d bytes]',
             $this->durationSinceStart()->asString(),
             $this->durationSincePrevious()->asString(),
-            $this->memoryUsage()->bytes(),
+            $this->peakMemoryUsage()->bytes(),
         );
     }
 }

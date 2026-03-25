@@ -15,14 +15,18 @@ use Iterator;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @template-implements Iterator<int, ExtensionBootstrap>
+ * @template-implements Iterator<non-negative-int, ExtensionBootstrap>
  */
 final class ExtensionBootstrapCollectionIterator implements Iterator
 {
     /**
-     * @psalm-var list<ExtensionBootstrap>
+     * @var list<ExtensionBootstrap>
      */
     private readonly array $extensionBootstraps;
+
+    /**
+     * @var non-negative-int
+     */
     private int $position = 0;
 
     public function __construct(ExtensionBootstrapCollection $extensionBootstraps)
@@ -40,6 +44,9 @@ final class ExtensionBootstrapCollectionIterator implements Iterator
         return $this->position < count($this->extensionBootstraps);
     }
 
+    /**
+     * @return non-negative-int
+     */
     public function key(): int
     {
         return $this->position;

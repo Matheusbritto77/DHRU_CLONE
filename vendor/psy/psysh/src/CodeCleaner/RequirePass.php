@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,7 +25,7 @@ use Psy\Exception\FatalErrorException;
  */
 class RequirePass extends CodeCleanerPass
 {
-    private static $requireTypes = [Include_::TYPE_REQUIRE, Include_::TYPE_REQUIRE_ONCE];
+    private const REQUIRE_TYPES = [Include_::TYPE_REQUIRE, Include_::TYPE_REQUIRE_ONCE];
 
     /**
      * {@inheritdoc}
@@ -35,7 +35,7 @@ class RequirePass extends CodeCleanerPass
     public function enterNode(Node $origNode)
     {
         if (!$this->isRequireNode($origNode)) {
-            return;
+            return null;
         }
 
         $node = clone $origNode;
@@ -49,11 +49,15 @@ class RequirePass extends CodeCleanerPass
          *
          *   $foo = require \Psy\CodeCleaner\RequirePass::resolve($bar)
          */
-        // @todo Rename LNumber to Int_ once we drop support for PHP-Parser 4.x
+        // PHP-Parser 4.x uses LNumber, 5.x has LNumber as an alias to Int_
+        // Just use LNumber for compatibility with both versions
+        // @todo Switch to Int_ once we drop support for PHP-Parser 4.x
+        $arg = new LNumber($origNode->getStartLine());
+
         $node->expr = new StaticCall(
             new FullyQualifiedName(self::class),
             'resolve',
-            [new Arg($origNode->expr), new Arg(new LNumber($origNode->getStartLine()))],
+            [new Arg($origNode->expr), new Arg($arg)],
             $origNode->getAttributes()
         );
 
@@ -120,7 +124,7 @@ class RequirePass extends CodeCleanerPass
 
     private function isRequireNode(Node $node): bool
     {
-        return $node instanceof Include_ && \in_array($node->type, self::$requireTypes);
+        return $node instanceof Include_ && \in_array($node->type, self::REQUIRE_TYPES);
     }
 
     private static function getIncludePath(): array

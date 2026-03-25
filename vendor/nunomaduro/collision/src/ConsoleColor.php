@@ -97,12 +97,13 @@ class ConsoleColor
         $sequences = [];
 
         foreach ($style as $s) {
+            // @phpstan-ignore-next-line
             if (isset($this->themes[$s])) {
                 $sequences = array_merge($sequences, $this->themeSequence($s));
             } elseif ($this->isValidStyle($s)) {
                 $sequences[] = $this->styleSequence($s);
             } else {
-                throw new ShouldNotHappen();
+                throw new ShouldNotHappen;
             }
         }
 

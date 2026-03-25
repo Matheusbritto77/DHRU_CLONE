@@ -1,217 +1,127 @@
 <x-app-layout layout="app2">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-black leading-tight">
-            {{ __('IMEI Services') }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-2xl text-apple-dark dark:text-white leading-tight tracking-tight">
+                {{ __('Serviços IMEI') }}
+            </h2>
+        </div>
     </x-slot>
 
-    <style>
-        /* Estilos CSS para a tabela e serviços */
-        .group-header {
-            background-color: #ffffff; /* Cor de fundo do cabeçalho do grupo */
-            font-size: 1.1rem; /* Tamanho da fonte do nome do grupo */
-            font-weight: bold; /* Negrito para destacar o nome do grupo */
-            padding: 10px 20px; /* Espaçamento interno do cabeçalho do grupo */
-            border-bottom: 2px solid #cbd5e0; /* Linha divisória abaixo do cabeçalho do grupo */
-            color: #333; /* Cor do texto preto */
-        }
-
-        .service-link {
-            color: #3182ce; /* Cor do link para serviços */
-            cursor: pointer; /* Altera o cursor para indicar que é clicável */
-            text-decoration: none; /* Sem sublinhado nos links */
-            transition: color 0.3s ease; /* Transição suave de cor ao passar o mouse */
-        }
-
-        .service-link:hover {
-            color: green; /* Cor do link ao passar o mouse */
-        }
-
-        .service-table-container {
-            margin-bottom: 20px; /* Espaçamento inferior para separar da próxima seção */
-            overflow-x: auto; /* Adiciona rolagem horizontal */
-        }
-
-        .service-table {
-            width: 100%; /* Ocupa toda a largura disponível */
-            border-collapse: collapse; /* Colapso de bordas para melhor aparência */
-        }
-
-        .service-table th,
-        .service-table td {
-            padding: 8px; /* Espaçamento interno das células da tabela reduzido */
-            text-align: left; /* Alinhamento do texto à esquerda */
-            border-bottom: 1px solid #cbd5e0; /* Linha divisória entre as células */
-            color: #333; /* Cor do texto preto */
-        }
-
-        .service-table th {
-            background-color: #ffffff; /* Cor de fundo do cabeçalho da tabela */
-            font-size: 0.9rem; /* Tamanho da fonte do cabeçalho da tabela */
-            font-weight: bold; /* Negrito para os cabeçalhos da tabela */
-            color: #333; /* Cor do texto preto */
-        }
-
-        /* Estilos para alinhar os campos de busca e filtro lado a lado */
-        .search-group-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .search-group-container .relative {
-            flex: 1;
-            margin-right: 1rem;
-        }
-
-        .form-label {
-            color: #ffffff; /* Cor do texto branco para rótulos */
-        }
-
-        .form-input,
-        .form-select {
-            color: #333; /* Cor do texto do input/select */
-            background-color: #ffffff; /* Fundo branco para input/select */
-            border: 1px solid #cbd5e0; /* Bordas cinzas para input/select */
-            border-radius: 0.25rem; /* Borda arredondada */
-            padding: 0.5rem; /* Espaçamento interno */
-            width: 100%; /* Largura total */
-        }
-
-        /* Media query para telas menores */
-        @media (max-width: 768px) {
-            .service-table-container {
-                overflow-x: auto; /* Adiciona rolagem horizontal em telas menores */
-            }
-        }
-    </style>
-    
-    <div class="container mx-auto py-8">
-        <h1 class="mb-4 text-2xl text-white">{{ __('Select IMEI Service') }}</h1>
-
-        <div class="search-group-container">
+    <div class="py-12 px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+        
+        <!-- Search and Filter Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div class="relative">
-                <label for="search-input" class="form-label">{{ __('Search IMEI Services') }}</label>
-                <input type="text" id="search-input" class="form-input w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Search services...">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="search-input" class="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-[#1d1d1f] border border-gray-200 dark:border-gray-800 text-apple-dark dark:text-gray-100 text-[15px] rounded-[16px] shadow-sm focus:ring-1 focus:ring-apple-blue focus:border-apple-blue transition-all outline-none" placeholder="{{ __('Buscar Serviço de IMEI...') }}">
             </div>
 
             <div class="relative">
-                <label for="group-filter" class="form-label">{{ __('Filter by Group') }}</label>
-                <select id="group-filter" class="form-select block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    <option value="">All Groups</option>
-                    <!-- Options will be populated dynamically -->
+                <select id="group-filter" class="w-full pl-4 pr-11 py-3.5 bg-white dark:bg-[#1d1d1f] border border-gray-200 dark:border-gray-800 text-apple-dark dark:text-gray-100 text-[15px] rounded-[16px] shadow-sm focus:ring-1 focus:ring-apple-blue focus:border-apple-blue transition-all outline-none appearance-none">
+                    <option value="">{{ __('Todos os Grupos') }}</option>
                 </select>
+                <div class="absolute inset-y-0 right-0 top-0 pr-4 flex items-center pointer-events-none h-full">
+                    <i class="fas fa-chevron-down text-gray-400 text-[12px]"></i>
+                </div>
             </div>
         </div>
 
-        <div class="service-table-container">
-            <table class="min-w-full bg-white border border-gray-300 service-table">
-                <thead>
-                    <tr>
-                        <th class="py-2 px-3">{{ __('Service Name') }}</th>
-                        <th class="py-2 px-3">{{ __('Time') }}</th>
-                        <th class="py-2 px-3">{{ __('Cost') }}</th>
-                    </tr>
-                </thead>
-                <tbody id="service-list">
-                    <!-- Dynamic rows will be appended here -->
-                </tbody>
-            </table>
+        <!-- Table Container -->
+        <div class="bg-white dark:bg-[#1d1d1f] shadow-[0_8px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800/80">
+                            <th class="py-4 px-6 text-[12px] font-semibold text-gray-500 uppercase tracking-widest">{{ __('Nome do Serviço') }}</th>
+                            <th class="py-4 px-6 text-[12px] font-semibold text-gray-500 uppercase tracking-widest">{{ __('Tempo Médio') }}</th>
+                            <th class="py-4 px-6 text-[12px] font-semibold text-gray-500 uppercase tracking-widest text-right">{{ __('Custo') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="service-list" class="divide-y divide-gray-50 dark:divide-gray-800/40">
+                        <!-- Dynamic rows will be appended here via jQuery -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- Scripts do jQuery refatorado com Tailwind Classes na injeção -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const searchInput = $('#search-input');
+            const serviceList = $('#service-list');
+            const groupFilter = $('#group-filter');
 
+            const filteredServices = {!! json_encode($filteredServices ?? []) !!};
 
+            function renderServices(services) {
+                serviceList.empty();
+                if (services.length > 0) {
+                    let currentGroup = null;
 
-   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    $(document).ready(function() {
-        const searchInput = $('#search-input');
-        const serviceList = $('#service-list');
-        const groupFilter = $('#group-filter');
+                    services.forEach(function(service) {
+                        if (currentGroup !== service.GROUPNAME) {
+                            const groupHeaderRow = $('<tr></tr>')
+                                .append($('<td colspan="3" class="py-3 px-6 bg-gray-50/80 dark:bg-[#161617]/80 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-t border-b border-gray-100 dark:border-gray-800"></td>').text(service.GROUPNAME));
+                            serviceList.append(groupHeaderRow);
+                            currentGroup = service.GROUPNAME;
+                        }
 
-        // Dados de exemplo para simular resposta do servidor
-        const filteredServices = {!! json_encode($filteredServices) !!};
+                        const serviceRow = $('<tr class="hover:bg-gray-50/80 dark:hover:bg-white/[0.04] transition-colors cursor-pointer group"></tr>')
+                            .append($('<td class="py-4 px-6 text-[15px] font-medium text-apple-dark dark:text-gray-200 group-hover:text-apple-blue dark:group-hover:text-blue-400 transition-colors service-link"></td>')
+                                .text(service.SERVICENAME)
+                                .data('service', service)
+                            )
+                            .append($('<td class="py-4 px-6 text-[14px] text-gray-500 dark:text-gray-400"></td>').text(service.TIME))
+                            .append($('<td class="py-4 px-6 text-[14px] font-medium text-green-600 dark:text-green-400 text-right"></td>').text('$' + service.CREDIT));
 
-        function renderServices(services) {
-            serviceList.empty();
-            if (services.length > 0) {
-                let currentGroup = null;
+                        // Clique na linha
+                        serviceRow.click(function(e) {
+                            e.preventDefault();
+                            const serviceData = $(this).find('.service-link').data('service');
+                            if(typeof openModal === 'function') openModal(serviceData);
+                        });
 
-                services.forEach(function(service) {
-                    // Verifica se o serviço atual pertence a um novo grupo
-                    if (currentGroup !== service.GROUPNAME) {
-                        // Renderiza o cabeçalho do grupo
-                        const groupHeaderRow = $('<tr></tr>')
-                            .append($('<td colspan="3" class="py-2 px-4 group-header"></td>').text(service.GROUPNAME));
-                        serviceList.append(groupHeaderRow);
-
-                        // Atualiza o grupo atual
-                        currentGroup = service.GROUPNAME;
-                    }
-
-                    // Constrói a linha da tabela com todos os três <td> aninhados corretamente (sem o SERVICEID)
-                    const serviceRow = $('<tr></tr>')
-                        .append($('<td class="py-2 px-3 service-link"></td>')
-                            .text(service.SERVICENAME)
-                            .data('service', service)
-                        )
-                        .append($('<td class="py-2 px-3"></td>').text(service.TIME))
-                        .append($('<td class="py-2 px-3"></td>').text('$' + service.CREDIT));
-
-                    serviceList.append(serviceRow);
-                });
-
-                // Manipulador de clique para links de serviço
-                $('.service-link').click(function(e) {
-                    e.preventDefault();
-                    const serviceData = $(this).data('service');
-                    console.log('Service Data:', serviceData);
-
-                    // Abre o modal com os dados do serviço
-                    openModal(serviceData);
-                });
-            } else {
-                const noResultRow = $('<tr></tr>')
-                    .append($('<td colspan="3" class="py-2 px-4 text-center"></td>').text('No services found'));
-                serviceList.append(noResultRow);
+                        serviceList.append(serviceRow);
+                    });
+                } else {
+                    const noResultRow = $('<tr></tr>')
+                        .append($('<td colspan="3" class="py-16 px-6 text-center text-gray-500 dark:text-gray-400 font-light"></td>').html('<i class="fas fa-search text-3xl mb-3 opacity-20 block"></i>Nenhum serviço encontrado.'));
+                    serviceList.append(noResultRow);
+                }
             }
-        }
 
-        // Função para preencher o dropdown de filtro de grupo
-        function populateGroupFilter(services) {
-            const groups = [...new Set(services.map(service => service.GROUPNAME))];
-            const options = groups.map(group => `<option value="${group}">${group}</option>`);
-            groupFilter.append(options);
-        }
+            function populateGroupFilter(services) {
+                const groups = [...new Set(services.map(service => service.GROUPNAME))];
+                const options = groups.map(group => `<option value="${group}">${group}</option>`);
+                groupFilter.append(options);
+            }
 
-        // Função para carregar serviços imediatamente ao carregar a página
-        renderServices(filteredServices);
-        populateGroupFilter(filteredServices);
+            if(filteredServices) {
+                renderServices(filteredServices);
+                populateGroupFilter(filteredServices);
+            }
 
-        // Listener para alterações de input no campo de busca
-        searchInput.on('input', function() {
-            const query = $(this).val().trim().toLowerCase();
-            const filtered = filteredServices.filter(service =>
-                service.SERVICENAME.toLowerCase().includes(query)
-            );
+            searchInput.on('input', function() {
+                const query = $(this).val().trim().toLowerCase();
+                const filtered = filteredServices.filter(service =>
+                    (service.SERVICENAME || '').toLowerCase().includes(query)
+                );
+                const selectedGroup = groupFilter.val();
+                const filteredByGroup = selectedGroup ? filtered.filter(service => service.GROUPNAME === selectedGroup) : filtered;
+                renderServices(filteredByGroup);
+            });
 
-            // Filtra pelo grupo selecionado, se um grupo estiver selecionado
-            const selectedGroup = groupFilter.val();
-            const filteredByGroup = selectedGroup ? filtered.filter(service => service.GROUPNAME === selectedGroup) : filtered;
-
-            renderServices(filteredByGroup);
+            groupFilter.on('change', function() {
+                const selectedGroup = $(this).val();
+                const filteredByGroup = selectedGroup ? filteredServices.filter(service => service.GROUPNAME === selectedGroup) : filteredServices;
+                renderServices(filteredByGroup);
+            });
         });
-
-        // Listener para alterações no dropdown de filtro de grupo
-        groupFilter.on('change', function() {
-            const selectedGroup = $(this).val();
-            const filteredByGroup = selectedGroup ? filteredServices.filter(service => service.GROUPNAME === selectedGroup) : filteredServices;
-            renderServices(filteredByGroup);
-        });
-    });
-</script>
-
-@include('admin.modal.sn')
+    </script>
+    
+    @includeIf('admin.modal.sn')
 </x-app-layout>

@@ -14,20 +14,20 @@ use Countable;
 use IteratorAggregate;
 
 /**
- * @template-implements IteratorAggregate<int, TestData>
+ * @template-implements IteratorAggregate<non-negative-int, TestData>
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 final readonly class TestDataCollection implements Countable, IteratorAggregate
 {
     /**
-     * @psalm-var list<TestData>
+     * @var list<TestData>
      */
     private array $data;
     private ?DataFromDataProvider $fromDataProvider;
 
     /**
-     * @psalm-param list<TestData> $data
+     * @param list<TestData> $data
      */
     public static function fromArray(array $data): self
     {
@@ -49,7 +49,7 @@ final readonly class TestDataCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @psalm-return list<TestData>
+     * @return list<TestData>
      */
     public function asArray(): array
     {
@@ -62,7 +62,7 @@ final readonly class TestDataCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @psalm-assert-if-true !null $this->fromDataProvider
+     * @phpstan-assert-if-true !null $this->fromDataProvider
      */
     public function hasDataFromDataProvider(): bool
     {

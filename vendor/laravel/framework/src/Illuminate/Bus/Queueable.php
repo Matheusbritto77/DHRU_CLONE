@@ -5,8 +5,12 @@ namespace Illuminate\Bus;
 use Closure;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Laravel\SerializableClosure\SerializableClosure;
 use PHPUnit\Framework\Assert as PHPUnit;
 use RuntimeException;
+
+use function Illuminate\Support\enum_value;
 
 trait Queueable
 {
@@ -23,6 +27,20 @@ trait Queueable
      * @var string|null
      */
     public $queue;
+
+    /**
+     * The job "group" the job should be sent to.
+     *
+     * @var string|null
+     */
+    public $messageGroup;
+
+    /**
+     * The job deduplicator callback the job should use to generate the deduplication ID.
+     *
+     * @var \Laravel\SerializableClosure\SerializableClosure|null
+     */
+    public $deduplicator;
 
     /**
      * The number of seconds before the job should be made available.
@@ -76,12 +94,12 @@ trait Queueable
     /**
      * Set the desired connection for the job.
      *
-     * @param  string|null  $connection
+     * @param  \UnitEnum|string|null  $connection
      * @return $this
      */
     public function onConnection($connection)
     {
-        $this->connection = $connection;
+        $this->connection = enum_value($connection);
 
         return $this;
     }
@@ -89,12 +107,44 @@ trait Queueable
     /**
      * Set the desired queue for the job.
      *
-     * @param  string|null  $queue
+     * @param  \UnitEnum|string|null  $queue
      * @return $this
      */
     public function onQueue($queue)
     {
-        $this->queue = $queue;
+        $this->queue = enum_value($queue);
+
+        return $this;
+    }
+
+    /**
+     * Set the desired job "group".
+     *
+     * This feature is only supported by some queues, such as Amazon SQS.
+     *
+     * @param  \UnitEnum|string  $group
+     * @return $this
+     */
+    public function onGroup($group)
+    {
+        $this->messageGroup = enum_value($group);
+
+        return $this;
+    }
+
+    /**
+     * Set the desired job deduplicator callback.
+     *
+     * This feature is only supported by some queues, such as Amazon SQS FIFO.
+     *
+     * @param  callable|null  $deduplicator
+     * @return $this
+     */
+    public function withDeduplicator($deduplicator)
+    {
+        $this->deduplicator = $deduplicator instanceof Closure
+            ? new SerializableClosure($deduplicator)
+            : $deduplicator;
 
         return $this;
     }
@@ -102,13 +152,15 @@ trait Queueable
     /**
      * Set the desired connection for the chain.
      *
-     * @param  string|null  $connection
+     * @param  \UnitEnum|string|null  $connection
      * @return $this
      */
     public function allOnConnection($connection)
     {
-        $this->chainConnection = $connection;
-        $this->connection = $connection;
+        $resolvedConnection = enum_value($connection);
+
+        $this->chainConnection = $resolvedConnection;
+        $this->connection = $resolvedConnection;
 
         return $this;
     }
@@ -116,13 +168,15 @@ trait Queueable
     /**
      * Set the desired queue for the chain.
      *
-     * @param  string|null  $queue
+     * @param  \UnitEnum|string|null  $queue
      * @return $this
      */
     public function allOnQueue($queue)
     {
-        $this->chainQueue = $queue;
-        $this->queue = $queue;
+        $resolvedQueue = enum_value($queue);
+
+        $this->chainQueue = $resolvedQueue;
+        $this->queue = $resolvedQueue;
 
         return $this;
     }
@@ -197,9 +251,9 @@ trait Queueable
      */
     public function chain($chain)
     {
-        $this->chained = collect($chain)->map(function ($job) {
-            return $this->serializeJob($job);
-        })->all();
+        $this->chained = ChainedBatch::prepareNestedBatches(new Collection($chain))
+            ->map(fn ($job) => $this->serializeJob($job))
+            ->all();
 
         return $this;
     }
@@ -212,7 +266,11 @@ trait Queueable
      */
     public function prependToChain($job)
     {
-        $this->chained = Arr::prepend($this->chained, $this->serializeJob($job));
+        $jobs = ChainedBatch::prepareNestedBatches(Collection::wrap($job));
+
+        foreach ($jobs->reverse() as $job) {
+            $this->chained = Arr::prepend($this->chained, $this->serializeJob($job));
+        }
 
         return $this;
     }
@@ -225,7 +283,11 @@ trait Queueable
      */
     public function appendToChain($job)
     {
-        $this->chained = array_merge($this->chained, [$this->serializeJob($job)]);
+        $jobs = ChainedBatch::prepareNestedBatches(Collection::wrap($job));
+
+        foreach ($jobs as $job) {
+            $this->chained = array_merge($this->chained, [$this->serializeJob($job)]);
+        }
 
         return $this;
     }
@@ -260,7 +322,7 @@ trait Queueable
      */
     public function dispatchNextJobInChain()
     {
-        if (! empty($this->chained)) {
+        if (is_array($this->chained) && ! empty($this->chained)) {
             dispatch(tap(unserialize(array_shift($this->chained)), function ($next) {
                 $next->chained = $this->chained;
 
@@ -282,7 +344,7 @@ trait Queueable
      */
     public function invokeChainCatchCallbacks($e)
     {
-        collect($this->chainCatchCallbacks)->each(function ($callback) use ($e) {
+        (new Collection($this->chainCatchCallbacks))->each(function ($callback) use ($e) {
             $callback($e);
         });
     }
@@ -296,14 +358,14 @@ trait Queueable
     public function assertHasChain($expectedChain)
     {
         PHPUnit::assertTrue(
-            collect($expectedChain)->isNotEmpty(),
+            (new Collection($expectedChain))->isNotEmpty(),
             'The expected chain can not be empty.'
         );
 
-        if (collect($expectedChain)->contains(fn ($job) => is_object($job))) {
-            $expectedChain = collect($expectedChain)->map(fn ($job) => serialize($job))->all();
+        if ((new Collection($expectedChain))->contains(fn ($job) => is_object($job))) {
+            $expectedChain = (new Collection($expectedChain))->map(fn ($job) => serialize($job))->all();
         } else {
-            $chain = collect($this->chained)->map(fn ($job) => get_class(unserialize($job)))->all();
+            $chain = (new Collection($this->chained))->map(fn ($job) => get_class(unserialize($job)))->all();
         }
 
         PHPUnit::assertTrue(

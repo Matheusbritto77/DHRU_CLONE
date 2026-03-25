@@ -65,7 +65,9 @@ use Throwable;
  * @method Carbon              createStrict(?int $year = 0, ?int $month = 1, ?int $day = 1, ?int $hour = 0, ?int $minute = 0, ?int $second = 0, $timezone = null)   Create a new Carbon instance from a specific date and time using strict validation.
  * @method mixed               executeWithLocale(string $locale, callable $func)                                                                                    Set the current locale to the given, execute the passed function, reset the locale to previous one,
  *                                                                                                                                                                  then return the result of the closure (or null if the closure was void).
- * @method Carbon              fromSerialized($value)                                                                                                               Create an instance from a serialized string.
+ * @method Carbon              fromSerialized($value, array $options = [])                                                                                          Create an instance from a serialized string.
+ *                                                                                                                                                                  If $value is not from a trusted source, consider using the allowed_classes option to limit
+ *                                                                                                                                                                  the types of objects that can be built, for instance:
  * @method array               getAvailableLocales()                                                                                                                Returns the list of internally available locales and already loaded custom locales.
  *                                                                                                                                                                  (It will ignore custom translator dynamic loading.)
  * @method Language[]          getAvailableLocalesInfo()                                                                                                            Returns list of Language object for each available locale. This object allow you to get the ISO name, native
@@ -96,7 +98,7 @@ use Throwable;
  *                                                                                                                                                                  Support is considered enabled if the 4 sentences are translated in the given locale.
  * @method bool                localeHasShortUnits(string $locale)                                                                                                  Returns true if the given locale is internally supported and has short-units support.
  *                                                                                                                                                                  Support is considered enabled if either year, day or hour has a short variant translated.
- * @method ?Carbon             make($var)                                                                                                                           Make a Carbon instance from given variable if possible.
+ * @method ?Carbon             make($var, DateTimeZone|string|null $timezone = null)                                                                                Make a Carbon instance from given variable if possible.
  *                                                                                                                                                                  Always return a new instance. Parse only strings and only these likely to be dates (skip intervals
  *                                                                                                                                                                  and recurrences). Throw an exception for invalid format, but otherwise return null.
  * @method void                mixin(object|string $mixin)                                                                                                          Mix another object into the class.
@@ -318,6 +320,8 @@ class Factory
      * });
      * echo $factory->yesterday()->hours(11)->userFormat();
      * ```
+     *
+     * @param-closure-this  static  $macro
      */
     public function macro(string $name, ?callable $macro): void
     {
@@ -637,12 +641,13 @@ class Factory
      */
     public function withTestNow(mixed $testNow, callable $callback): mixed
     {
+        $previousTestNow = $this->getTestNow();
         $this->setTestNow($testNow);
 
         try {
             $result = $callback();
         } finally {
-            $this->setTestNow();
+            $this->setTestNow($previousTestNow);
         }
 
         return $result;

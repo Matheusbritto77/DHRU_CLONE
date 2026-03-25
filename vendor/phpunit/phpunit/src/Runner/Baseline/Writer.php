@@ -12,19 +12,32 @@ namespace PHPUnit\Runner\Baseline;
 use function assert;
 use function dirname;
 use function file_put_contents;
+use function is_dir;
+use function realpath;
+use function sprintf;
 use XMLWriter;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final readonly class Writer
 {
     /**
-     * @psalm-param non-empty-string $baselineFile
+     * @param non-empty-string $baselineFile
+     *
+     * @throws CannotWriteBaselineException
      */
     public function write(string $baselineFile, Baseline $baseline): void
     {
-        $pathCalculator = new RelativePathCalculator(dirname($baselineFile));
+        $normalizedBaselineFile = realpath(dirname($baselineFile));
+
+        if ($normalizedBaselineFile === false || !is_dir($normalizedBaselineFile)) {
+            throw new CannotWriteBaselineException(sprintf('Cannot write baseline to "%s".', $baselineFile));
+        }
+
+        $pathCalculator = new RelativePathCalculator($normalizedBaselineFile);
 
         $writer = new XMLWriter;
 
@@ -48,7 +61,7 @@ final readonly class Writer
 
                 foreach ($issues as $issue) {
                     $writer->startElement('issue');
-                    $writer->writeCData($issue->description());
+                    $writer->writeCdata($issue->description());
                     $writer->endElement();
                 }
 

@@ -17,17 +17,17 @@ use PHPUnit\Framework\MockObject\Builder\InvocationMocker as InvocationMockerBui
 use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
 trait MockObjectApi
 {
-    /** @noinspection MagicMethodsValidityInspection */
     public function __phpunit_hasMatchers(): bool
     {
         return $this->__phpunit_getInvocationHandler()->hasMatchers();
     }
 
-    /** @noinspection MagicMethodsValidityInspection */
     public function __phpunit_verify(bool $unsetInvocationMocker = true): void
     {
         $this->__phpunit_getInvocationHandler()->verify();
@@ -63,7 +63,7 @@ trait MockObjectApi
                 }
                 // @codeCoverageIgnoreStart
             } catch (NoTestCaseObjectOnCallStackException) {
-                EventFacade::emitter()->testRunnerTriggeredDeprecation($message);
+                EventFacade::emitter()->testRunnerTriggeredPhpunitDeprecation($message);
                 // @codeCoverageIgnoreEnd
             }
         }

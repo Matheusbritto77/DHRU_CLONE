@@ -12,6 +12,8 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\ReflectsClosures;
 use InvalidArgumentException;
 
+use function Illuminate\Support\enum_value;
+
 class Translator extends NamespacedItemResolver implements TranslatorContract
 {
     use Macroable, ReflectsClosures;
@@ -84,7 +86,6 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
      *
      * @param  \Illuminate\Contracts\Translation\Loader  $loader
      * @param  string  $locale
-     * @return void
      */
     public function __construct(Loader $loader, $locale)
     {
@@ -117,7 +118,16 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
     {
         $locale = $locale ?: $this->locale;
 
+        // We should temporarily disable the handling of missing translation keys
+        // while performing the existence check. After the check, we will turn
+        // the missing translation keys handling back to its original value.
+        $handleMissingTranslationKeys = $this->handleMissingTranslationKeys;
+
+        $this->handleMissingTranslationKeys = false;
+
         $line = $this->get($key, [], $locale, $fallback);
+
+        $this->handleMissingTranslationKeys = $handleMissingTranslationKeys;
 
         // For JSON translations, the loaded files will contain the correct line.
         // Otherwise, we must assume we are handling typical translation file
@@ -191,7 +201,7 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
     public function choice($key, $number, array $replace = [], $locale = null)
     {
         $line = $this->get(
-            $key, $replace, $locale = $this->localeForChoice($locale)
+            $key, [], $locale = $this->localeForChoice($key, $locale)
         );
 
         // If the given "number" is actually an array or countable we will simply count the
@@ -201,7 +211,9 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
             $number = count($number);
         }
 
-        $replace['count'] = $number;
+        if (! isset($replace['count'])) {
+            $replace['count'] = $number;
+        }
 
         return $this->makeReplacements(
             $this->getSelector()->choose($line, $number, $locale), $replace
@@ -211,12 +223,15 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
     /**
      * Get the proper locale for a choice operation.
      *
+     * @param  string  $key
      * @param  string|null  $locale
      * @return string
      */
-    protected function localeForChoice($locale)
+    protected function localeForChoice($key, $locale)
     {
-        return $locale ?: $this->locale ?: $this->fallback;
+        $locale = $locale ?: $this->locale;
+
+        return $this->hasForLocale($key, $locale) ? $locale : $this->fallback;
     }
 
     /**
@@ -272,12 +287,14 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
                 continue;
             }
 
-            if (is_object($value) && isset($this->stringableHandlers[get_class($value)])) {
-                $value = call_user_func($this->stringableHandlers[get_class($value)], $value);
+            if (is_object($value)) {
+                $value = isset($this->stringableHandlers[get_class($value)])
+                    ? call_user_func($this->stringableHandlers[get_class($value)], $value)
+                    : enum_value($value);
             }
 
-            $shouldReplace[':'.Str::ucfirst($key ?? '')] = Str::ucfirst($value ?? '');
-            $shouldReplace[':'.Str::upper($key ?? '')] = Str::upper($value ?? '');
+            $shouldReplace[':'.Str::ucfirst($key)] = Str::ucfirst($value ?? '');
+            $shouldReplace[':'.Str::upper($key)] = Str::upper($value ?? '');
             $shouldReplace[':'.$key] = $value;
         }
 
@@ -391,6 +408,17 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
     }
 
     /**
+     * Add a new path to the loader.
+     *
+     * @param  string  $path
+     * @return void
+     */
+    public function addPath($path)
+    {
+        $this->loader->addPath($path);
+    }
+
+    /**
      * Add a new JSON path to the loader.
      *
      * @param  string  $path
@@ -428,7 +456,9 @@ class Translator extends NamespacedItemResolver implements TranslatorContract
     {
         $locales = array_filter([$locale ?: $this->locale, $this->fallback]);
 
-        return call_user_func($this->determineLocalesUsing ?: fn () => $locales, $locales);
+        $determined = call_user_func($this->determineLocalesUsing ?: fn () => $locales, $locales);
+
+        return array_values(array_unique($determined));
     }
 
     /**

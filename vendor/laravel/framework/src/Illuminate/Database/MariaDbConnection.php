@@ -13,6 +13,14 @@ use Illuminate\Support\Str;
 class MariaDbConnection extends MySqlConnection
 {
     /**
+     * {@inheritdoc}
+     */
+    public function getDriverTitle()
+    {
+        return 'MariaDB';
+    }
+
+    /**
      * Determine if the connected database is a MariaDB database.
      *
      * @return bool
@@ -39,9 +47,7 @@ class MariaDbConnection extends MySqlConnection
      */
     protected function getDefaultQueryGrammar()
     {
-        ($grammar = new QueryGrammar)->setConnection($this);
-
-        return $this->withTablePrefix($grammar);
+        return new QueryGrammar($this);
     }
 
     /**
@@ -65,9 +71,7 @@ class MariaDbConnection extends MySqlConnection
      */
     protected function getDefaultSchemaGrammar()
     {
-        ($grammar = new SchemaGrammar)->setConnection($this);
-
-        return $this->withTablePrefix($grammar);
+        return new SchemaGrammar($this);
     }
 
     /**

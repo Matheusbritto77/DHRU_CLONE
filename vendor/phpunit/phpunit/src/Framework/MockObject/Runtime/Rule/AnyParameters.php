@@ -12,10 +12,15 @@ namespace PHPUnit\Framework\MockObject\Rule;
 use PHPUnit\Framework\MockObject\Invocation as BaseInvocation;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final class AnyParameters implements ParametersRule
 {
+    /**
+     * @throws void
+     */
     public function apply(BaseInvocation $invocation): void
     {
     }

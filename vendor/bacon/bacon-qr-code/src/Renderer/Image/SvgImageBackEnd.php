@@ -19,8 +19,6 @@ use XMLWriter;
 final class SvgImageBackEnd implements ImageBackEndInterface
 {
     private const PRECISION = 3;
-    private const SCALE_FORMAT = 'scale(%.' . self::PRECISION . 'F)';
-    private const TRANSLATE_FORMAT = 'translate(%.' . self::PRECISION . 'F,%.' . self::PRECISION . 'F)';
 
     private ?XMLWriter $xmlWriter;
 
@@ -87,7 +85,7 @@ final class SvgImageBackEnd implements ImageBackEndInterface
         $this->xmlWriter->startElement('g');
         $this->xmlWriter->writeAttribute(
             'transform',
-            sprintf(self::SCALE_FORMAT, round($size, self::PRECISION))
+            sprintf('scale(%s)', round($size, self::PRECISION))
         );
         ++$this->stack[$this->currentStack];
     }
@@ -101,7 +99,7 @@ final class SvgImageBackEnd implements ImageBackEndInterface
         $this->xmlWriter->startElement('g');
         $this->xmlWriter->writeAttribute(
             'transform',
-            sprintf(self::TRANSLATE_FORMAT, round($x, self::PRECISION), round($y, self::PRECISION))
+            sprintf('translate(%s,%s)', round($x, self::PRECISION), round($y, self::PRECISION))
         );
         ++$this->stack[$this->currentStack];
     }
@@ -316,7 +314,11 @@ final class SvgImageBackEnd implements ImageBackEndInterface
                 break;
         }
 
-        $id = sprintf('g%d', ++$this->gradientCount);
+        $toBeHashed = $this->getColorString($startColor) . $this->getColorString($endColor) . $gradient->getType();
+        if ($startColor instanceof Alpha) {
+            $toBeHashed .= (string) $startColor->getAlpha();
+        }
+        $id = sprintf('g%d-%s', ++$this->gradientCount, hash('xxh64', $toBeHashed));
         $this->xmlWriter->writeAttribute('id', $id);
 
         $this->xmlWriter->startElement('stop');

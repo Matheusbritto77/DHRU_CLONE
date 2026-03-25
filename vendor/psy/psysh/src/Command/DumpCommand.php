@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,7 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DumpCommand extends ReflectingCommand implements PresenterAware
 {
-    private $presenter;
+    private Presenter $presenter;
 
     /**
      * PresenterAware interface.
@@ -40,7 +40,7 @@ class DumpCommand extends ReflectingCommand implements PresenterAware
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('dump')
@@ -73,7 +73,7 @@ HELP
     {
         $depth = $input->getOption('depth');
         $target = $this->resolveCode($input->getArgument('target'));
-        $output->page($this->presenter->present($target, $depth, $input->getOption('all') ? Presenter::VERBOSE : 0));
+        $this->shellOutput($output)->page($this->presenter->present($target, $depth, ($input->getOption('all') ? Presenter::VERBOSE : 0) | Presenter::RAW), OutputInterface::OUTPUT_RAW);
 
         if (\is_object($target)) {
             $this->setCommandScopeVariables(new \ReflectionObject($target));

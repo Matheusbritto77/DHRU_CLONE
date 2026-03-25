@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 use PHPUnit\Event\Facade;
 use PHPUnit\Runner\CodeCoverage;
+use PHPUnit\Runner\ErrorHandler;
 use PHPUnit\TextUI\Configuration\Registry as ConfigurationRegistry;
 use PHPUnit\TextUI\Configuration\CodeCoverageFilterRegistry;
-use PHPUnit\TextUI\XmlConfiguration\Loader;
 use PHPUnit\TextUI\Configuration\PhpHandler;
+use PHPUnit\TextUI\Configuration\SourceMapper;
 use PHPUnit\TestRunner\TestResult\PassedTests;
 
 // php://stdout does not obey output buffering. Any output would break
@@ -42,10 +43,31 @@ function __phpunit_run_isolated_test()
 
     require_once '{filename}';
 
+    $configuration = ConfigurationRegistry::get();
+
     if ({collectCodeCoverageInformation}) {
-        CodeCoverage::instance()->init(ConfigurationRegistry::get(), CodeCoverageFilterRegistry::instance(), true);
-        CodeCoverage::instance()->ignoreLines({linesToBeIgnored});
+        CodeCoverage::instance()->init($configuration, CodeCoverageFilterRegistry::instance(), true);
     }
+
+    $deprecationTriggers = [
+        'functions' => [],
+        'methods'   => [],
+    ];
+
+    foreach ($configuration->source()->deprecationTriggers()['functions'] as $function) {
+        $deprecationTriggers['functions'][] = $function;
+    }
+
+    foreach ($configuration->source()->deprecationTriggers()['methods'] as $method) {
+        [$className, $methodName] = explode('::', $method);
+
+        $deprecationTriggers['methods'][] = [
+            'className'  => $className,
+            'methodName' => $methodName,
+        ];
+    }
+
+    ErrorHandler::instance()->useDeprecationTriggers($deprecationTriggers);
 
     $test = new {className}('{methodName}');
 
@@ -66,9 +88,9 @@ function __phpunit_run_isolated_test()
     ini_set('xdebug.scream', '0');
 
     // Not every STDOUT target stream is rewindable
-    @rewind(STDOUT);
+    $hasRewound = @rewind(STDOUT);
 
-    if ($stdout = @stream_get_contents(STDOUT)) {
+    if ($hasRewound && $stdout = @stream_get_contents(STDOUT)) {
         $output         = $stdout . $output;
         $streamMetaData = stream_get_meta_data(STDOUT);
 
@@ -107,6 +129,11 @@ set_error_handler('__phpunit_error_handler');
 restore_error_handler();
 
 ConfigurationRegistry::loadFrom('{serializedConfiguration}');
+
+if ('{sourceMapFile}' !== '') {
+    SourceMapper::loadFrom('{sourceMapFile}', ConfigurationRegistry::get()->source());
+}
+
 (new PhpHandler)->handle(ConfigurationRegistry::get()->php());
 
 if ('{bootstrap}' !== '') {

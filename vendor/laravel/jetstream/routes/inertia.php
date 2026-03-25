@@ -51,7 +51,6 @@ Route::group(['middleware' => config('jetstream.middleware', ['web'])], function
                 Route::post('/user/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
                 Route::put('/user/api-tokens/{token}', [ApiTokenController::class, 'update'])->name('api-tokens.update');
                 Route::delete('/user/api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
-                Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
             }
 
             // Teams...

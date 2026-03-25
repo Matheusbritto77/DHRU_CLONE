@@ -9,7 +9,15 @@
  */
 namespace PHPUnit\Util\PHP;
 
+use PHPUnit\Event\Facade;
+use PHPUnit\Framework\ChildProcessResultProcessor;
+use PHPUnit\Framework\Test;
+use PHPUnit\Runner\CodeCoverage;
+use PHPUnit\TestRunner\TestResult\PassedTests;
+
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final class JobRunnerRegistry
@@ -18,15 +26,35 @@ final class JobRunnerRegistry
 
     public static function run(Job $job): Result
     {
-        if (self::$runner === null) {
-            self::$runner = new DefaultJobRunner;
-        }
+        return self::runner()->run($job);
+    }
 
-        return self::$runner->run($job);
+    /**
+     * @param non-empty-string $processResultFile
+     */
+    public static function runTestJob(Job $job, string $processResultFile, Test $test): void
+    {
+        self::runner()->runTestJob($job, $processResultFile, $test);
     }
 
     public static function set(JobRunner $runner): void
     {
         self::$runner = $runner;
+    }
+
+    private static function runner(): JobRunner
+    {
+        if (self::$runner === null) {
+            self::$runner = new DefaultJobRunner(
+                new ChildProcessResultProcessor(
+                    Facade::instance(),
+                    Facade::emitter(),
+                    PassedTests::instance(),
+                    CodeCoverage::instance(),
+                ),
+            );
+        }
+
+        return self::$runner;
     }
 }

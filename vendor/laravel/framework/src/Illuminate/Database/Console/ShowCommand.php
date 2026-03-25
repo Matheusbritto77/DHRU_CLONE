@@ -6,6 +6,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Number;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -45,9 +46,10 @@ class ShowCommand extends DatabaseInspectionCommand
         $data = [
             'platform' => [
                 'config' => $this->getConfigFromDatabase($database),
-                'name' => $this->getConnectionName($connection, $database),
+                'name' => $connection->getDriverTitle(),
+                'connection' => $connection->getName(),
                 'version' => $connection->getServerVersion(),
-                'open_connections' => $this->getConnectionCount($connection),
+                'open_connections' => $connection->threadCount(),
             ],
             'tables' => $this->tables($connection, $schema),
         ];
@@ -74,11 +76,14 @@ class ShowCommand extends DatabaseInspectionCommand
      */
     protected function tables(ConnectionInterface $connection, Builder $schema)
     {
-        return collect($schema->getTables())->map(fn ($table) => [
+        return (new Collection($schema->getTables()))->map(fn ($table) => [
             'table' => $table['name'],
             'schema' => $table['schema'],
+            'schema_qualified_name' => $table['schema_qualified_name'],
             'size' => $table['size'],
-            'rows' => $this->option('counts') ? $connection->table($table['name'])->count() : null,
+            'rows' => $this->option('counts')
+                ? $connection->withoutTablePrefix(fn ($connection) => $connection->table($table['schema_qualified_name'])->count())
+                : null,
             'engine' => $table['engine'],
             'collation' => $table['collation'],
             'comment' => $table['comment'],
@@ -94,12 +99,11 @@ class ShowCommand extends DatabaseInspectionCommand
      */
     protected function views(ConnectionInterface $connection, Builder $schema)
     {
-        return collect($schema->getViews())
-            ->reject(fn ($view) => str($view['name'])->startsWith(['pg_catalog', 'information_schema', 'spt_']))
+        return (new Collection($schema->getViews()))
             ->map(fn ($view) => [
                 'view' => $view['name'],
                 'schema' => $view['schema'],
-                'rows' => $connection->table($view->getName())->count(),
+                'rows' => $connection->withoutTablePrefix(fn ($connection) => $connection->table($view['schema_qualified_name'])->count()),
             ]);
     }
 
@@ -112,7 +116,7 @@ class ShowCommand extends DatabaseInspectionCommand
      */
     protected function types(ConnectionInterface $connection, Builder $schema)
     {
-        return collect($schema->getTypes())
+        return (new Collection($schema->getTypes()))
             ->map(fn ($type) => [
                 'name' => $type['name'],
                 'schema' => $type['schema'],
@@ -159,6 +163,7 @@ class ShowCommand extends DatabaseInspectionCommand
         $this->newLine();
 
         $this->components->twoColumnDetail('<fg=green;options=bold>'.$platform['name'].'</>', $platform['version']);
+        $this->components->twoColumnDetail('Connection', $platform['connection']);
         $this->components->twoColumnDetail('Database', Arr::get($platform['config'], 'database'));
         $this->components->twoColumnDetail('Host', Arr::get($platform['config'], 'host'));
         $this->components->twoColumnDetail('Port', Arr::get($platform['config'], 'port'));
@@ -182,13 +187,11 @@ class ShowCommand extends DatabaseInspectionCommand
             );
 
             $tables->each(function ($table) {
-                if ($tableSize = $table['size']) {
-                    $tableSize = Number::fileSize($tableSize, 2);
-                }
+                $tableSize = is_null($table['size']) ? null : Number::fileSize($table['size'], 2);
 
                 $this->components->twoColumnDetail(
                     ($table['schema'] ? $table['schema'].' <fg=gray;options=bold>/</> ' : '').$table['table'].($this->output->isVerbose() ? ' <fg=gray>'.$table['engine'].'</>' : null),
-                    ($tableSize ?: '—').($this->option('counts') ? ' <fg=gray;options=bold>/</> <fg=yellow;options=bold>'.Number::format($table['rows']).'</>' : '')
+                    ($tableSize ?? '—').($this->option('counts') ? ' <fg=gray;options=bold>/</> <fg=yellow;options=bold>'.Number::format($table['rows']).'</>' : '')
                 );
 
                 if ($this->output->isVerbose()) {

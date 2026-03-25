@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+7.4
+---
+
+ * Add `logger` (constructor) property to `RoundRobinTransport`
+
+7.3
+---
+
+ * Add DSN param `retry_period` to override default email transport retry period
+ * Add `Dsn::getBooleanOption()`
+ * Add DSN param `source_ip` to allow binding to a (specific) IPv4 or IPv6 address.
+ * Add DSN param `require_tls` to enforce use of TLS/STARTTLS
+ * Add `DkimSignedMessageListener`, `SmimeEncryptedMessageListener`, and `SmimeSignedMessageListener`
+
+7.2
+---
+
+ * Deprecate `TransportFactoryTestCase`, extend `AbstractTransportFactoryTestCase` instead
+
+   The `testIncompleteDsnException()` test is no longer provided by default. If you make use of it by implementing the `incompleteDsnProvider()` data providers,
+   you now need to use the `IncompleteDsnTestTrait`.
+
+ * Make `TransportFactoryTestCase` compatible with PHPUnit 10+
+ * Support unicode email addresses such as "dømi@dømi.example"
+
 7.1
 ---
 

@@ -14,9 +14,12 @@ use function file_get_contents;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
 use function sprintf;
+use function trim;
 use DOMDocument;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final readonly class Loader
@@ -40,25 +43,25 @@ final readonly class Loader
             );
         }
 
-        return $this->load($contents, $filename);
-    }
-
-    /**
-     * @throws XmlException
-     */
-    public function load(string $actual, ?string $filename = null): DOMDocument
-    {
-        if ($actual === '') {
-            if ($filename === null) {
-                throw new XmlException('Could not parse XML from empty string');
-            }
-
+        if (trim($contents) === '') {
             throw new XmlException(
                 sprintf(
                     'Could not parse XML from empty file "%s"',
                     $filename,
                 ),
             );
+        }
+
+        return $this->load($contents);
+    }
+
+    /**
+     * @throws XmlException
+     */
+    public function load(string $actual): DOMDocument
+    {
+        if ($actual === '') {
+            throw new XmlException('Could not parse XML from empty string');
         }
 
         $document                     = new DOMDocument;
@@ -76,19 +79,11 @@ final readonly class Loader
         libxml_use_internal_errors($internal);
         error_reporting($reporting);
 
-        if ($loaded === false || $message !== '') {
-            if ($filename !== null) {
-                throw new XmlException(
-                    sprintf(
-                        'Could not load "%s"%s',
-                        $filename,
-                        $message !== '' ? ":\n" . $message : '',
-                    ),
-                );
-            }
-
+        if ($loaded === false) {
             if ($message === '') {
+                // @codeCoverageIgnoreStart
                 $message = 'Could not load XML for unknown reason';
+                // @codeCoverageIgnoreEnd
             }
 
             throw new XmlException($message);

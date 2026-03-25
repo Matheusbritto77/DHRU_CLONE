@@ -14,21 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthenticateSession
 {
     /**
-     * The authentication factory implementation.
-     *
-     * @var \Illuminate\Contracts\Auth\Factory
-     */
-    protected $auth;
-
-    /**
      * Create a new middleware instance.
      *
-     * @param  \Illuminate\Contracts\Auth\Factory  $auth
-     * @return void
+     * @param  \Illuminate\Contracts\Auth\Factory  $auth  The authentication factory implementation.
      */
-    public function __construct(AuthFactory $auth)
+    public function __construct(protected AuthFactory $auth)
     {
-        $this->auth = $auth;
     }
 
     /**
@@ -51,8 +42,11 @@ class AuthenticateSession
         $shouldLogout = $guards->filter(
             fn ($guard, $driver) => $request->session()->has('password_hash_'.$driver)
         )->filter(
-            fn ($guard, $driver) => $request->session()->get('password_hash_'.$driver) !==
-                                    $request->user()->getAuthPassword()
+            fn ($guard, $driver) => ! $this->validatePasswordHash(
+                $guard,
+                $request->user()->getAuthPassword(),
+                $request->session()->get('password_hash_'.$driver)
+            )
         );
 
         if ($shouldLogout->isNotEmpty()) {
@@ -95,8 +89,33 @@ class AuthenticateSession
      */
     protected function storePasswordHashInSession($request, string $guard)
     {
+        $guardInstance = $this->auth->guard($guard);
+
         $request->session()->put([
-            "password_hash_{$guard}" => $this->auth->guard($guard)->user()->getAuthPassword(),
+            "password_hash_{$guard}" => method_exists($guardInstance, 'hashPasswordForCookie')
+                ? $guardInstance->hashPasswordForCookie($guardInstance->user()->getAuthPassword())
+                : $guardInstance->user()->getAuthPassword(),
         ]);
+    }
+
+    /**
+     * Validate the password hash against the stored value.
+     *
+     * @param  \Illuminate\Auth\SessionGuard  $guard
+     * @param  string|null  $passwordHash
+     * @param  string  $storedValue
+     * @return bool
+     */
+    protected function validatePasswordHash(SessionGuard $guard, ?string $passwordHash, string $storedValue): bool
+    {
+        // Try new HMAC format first (Laravel 12.45.0+)...
+        if (method_exists($guard, 'hashPasswordForCookie')) {
+            if (hash_equals($guard->hashPasswordForCookie($passwordHash), $storedValue)) {
+                return true;
+            }
+        }
+
+        // Fall back to raw password hash format for backward compatibility...
+        return hash_equals($passwordHash ?? '', $storedValue);
     }
 }

@@ -10,6 +10,7 @@
 namespace SebastianBergmann\Exporter;
 
 use const COUNT_RECURSIVE;
+use function assert;
 use function bin2hex;
 use function count;
 use function get_resource_type;
@@ -33,9 +34,12 @@ use function str_replace;
 use function strtr;
 use function var_export;
 use BackedEnum;
+use Google\Protobuf\Internal\Message;
+use ReflectionClass;
 use ReflectionObject;
 use SebastianBergmann\RecursionContext\Context as RecursionContext;
 use SplObjectStorage;
+use stdClass;
 use UnitEnum;
 
 final readonly class Exporter
@@ -46,11 +50,18 @@ final readonly class Exporter
     private int $shortenArraysLongerThan;
 
     /**
-     * @param non-negative-int $shortenArraysLongerThan
+     * @var positive-int
      */
-    public function __construct(int $shortenArraysLongerThan = 0)
+    private int $maxLengthForStrings;
+
+    /**
+     * @param non-negative-int $shortenArraysLongerThan
+     * @param positive-int     $maxLengthForStrings
+     */
+    public function __construct(int $shortenArraysLongerThan = 0, int $maxLengthForStrings = 40)
     {
         $this->shortenArraysLongerThan = $shortenArraysLongerThan;
+        $this->maxLengthForStrings     = $maxLengthForStrings;
     }
 
     /**
@@ -71,8 +82,16 @@ final readonly class Exporter
         return $this->recursiveExport($value, $indentation);
     }
 
-    public function shortenedRecursiveExport(array &$data, ?RecursionContext $processed = null): string
+    /**
+     * @param array<mixed> $data
+     * @param positive-int $maxLengthForStrings
+     */
+    public function shortenedRecursiveExport(array &$data, int $maxLengthForStrings = 40, ?RecursionContext $processed = null): string
     {
+        if ($maxLengthForStrings === 40) {
+            $maxLengthForStrings = $this->maxLengthForStrings;
+        }
+
         if (!$processed) {
             $processed = new RecursionContext;
         }
@@ -80,7 +99,7 @@ final readonly class Exporter
         $overallCount = @count($data, COUNT_RECURSIVE);
         $counter      = 0;
 
-        $export = $this->shortenedCountedRecursiveExport($data, $processed, $counter);
+        $export = $this->shortenedCountedRecursiveExport($data, $processed, $counter, $maxLengthForStrings);
 
         if ($this->shortenArraysLongerThan > 0 &&
             $overallCount > $this->shortenArraysLongerThan) {
@@ -98,14 +117,20 @@ final readonly class Exporter
      *
      * Newlines are replaced by the visible string '\n'.
      * Contents of arrays and objects (if any) are replaced by '...'.
+     *
+     * @param positive-int $maxLengthForStrings
      */
-    public function shortenedExport(mixed $value): string
+    public function shortenedExport(mixed $value, int $maxLengthForStrings = 40): string
     {
+        if ($maxLengthForStrings === 40) {
+            $maxLengthForStrings = $this->maxLengthForStrings;
+        }
+
         if (is_string($value)) {
             $string = str_replace("\n", '', $this->exportString($value));
 
-            if (mb_strlen($string) > 40) {
-                return mb_substr($string, 0, 30) . '...' . mb_substr($string, -7);
+            if (mb_strlen($string) > $maxLengthForStrings) {
+                return mb_substr($string, 0, $maxLengthForStrings - 10) . '...' . mb_substr($string, -7);
             }
 
             return $string;
@@ -129,12 +154,10 @@ final readonly class Exporter
         }
 
         if (is_object($value)) {
-            $numberOfProperties = count((new ReflectionObject($value))->getProperties());
-
             return sprintf(
                 '%s Object (%s)',
                 $value::class,
-                $numberOfProperties > 0 ? '...' : '',
+                $this->countProperties($value) > 0 ? '...' : '',
             );
         }
 
@@ -151,6 +174,8 @@ final readonly class Exporter
     /**
      * Converts an object to an array containing all of its private, protected
      * and public properties.
+     *
+     * @return array<mixed>
      */
     public function toArray(mixed $value): array
     {
@@ -201,7 +226,27 @@ final readonly class Exporter
         return $array;
     }
 
-    private function shortenedCountedRecursiveExport(array &$data, RecursionContext $processed, int &$counter): string
+    public function countProperties(object $value): int
+    {
+        if (!$this->canBeReflected($value)) {
+            // @codeCoverageIgnoreStart
+            return count($this->toArray($value));
+            // @codeCoverageIgnoreEnd
+        }
+
+        if (!$value instanceof stdClass) {
+            // using ReflectionClass prevents initialization of potential lazy objects
+            return count((new ReflectionClass($value))->getProperties());
+        }
+
+        return count((new ReflectionObject($value))->getProperties());
+    }
+
+    /**
+     * @param array<mixed> $data
+     * @param positive-int $maxLengthForStrings
+     */
+    private function shortenedCountedRecursiveExport(array &$data, RecursionContext $processed, int &$counter, int $maxLengthForStrings): string
     {
         $result = [];
 
@@ -217,13 +262,17 @@ final readonly class Exporter
             }
 
             if (is_array($value)) {
+                assert(is_array($data[$key]) || is_object($data[$key]));
+
                 if ($processed->contains($data[$key]) !== false) {
                     $result[] = '*RECURSION*';
                 } else {
-                    $result[] = '[' . $this->shortenedCountedRecursiveExport($data[$key], $processed, $counter) . ']';
+                    assert(is_array($data[$key]));
+
+                    $result[] = '[' . $this->shortenedCountedRecursiveExport($data[$key], $processed, $counter, $maxLengthForStrings) . ']';
                 }
             } else {
-                $result[] = $this->shortenedExport($value);
+                $result[] = $this->shortenedExport($value, $maxLengthForStrings);
             }
 
             $counter++;
@@ -302,11 +351,11 @@ final readonly class Exporter
 
         ini_set('precision', '-1');
 
-        $valueAsString = (string) $value;
+        $valueAsString = @(string) $value;
 
         ini_set('precision', $precisionBackup);
 
-        if ((string) (int) $value === $valueAsString) {
+        if ((string) @(int) $value === $valueAsString) {
             return $valueAsString . '.0';
         }
 
@@ -333,6 +382,9 @@ final readonly class Exporter
             "'";
     }
 
+    /**
+     * @param array<mixed> $value
+     */
     private function exportArray(array &$value, RecursionContext $processed, int $indentation): string
     {
         if (($key = $processed->contains($value)) !== false) {
@@ -352,6 +404,7 @@ final readonly class Exporter
                     . '    ' .
                     $this->recursiveExport($k, $indentation)
                     . ' => ' .
+                    /** @phpstan-ignore offsetAccess.invalidOffset */
                     $this->recursiveExport($value[$k], $indentation + 1, $processed)
                     . ",\n";
             }
@@ -392,5 +445,17 @@ final readonly class Exporter
         }
 
         return $class . ' Object #' . spl_object_id($value) . ' (' . $buffer . ')';
+    }
+
+    private function canBeReflected(object $object): bool
+    {
+        /** @phpstan-ignore class.notFound */
+        if ($object instanceof Message) {
+            // @codeCoverageIgnoreStart
+            return false;
+            // @codeCoverageIgnoreEnd
+        }
+
+        return true;
     }
 }

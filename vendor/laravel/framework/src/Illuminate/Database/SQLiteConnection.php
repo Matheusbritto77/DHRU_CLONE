@@ -13,35 +13,29 @@ use Illuminate\Filesystem\Filesystem;
 class SQLiteConnection extends Connection
 {
     /**
-     * Create a new database connection instance.
+     * {@inheritdoc}
+     */
+    public function getDriverTitle()
+    {
+        return 'SQLite';
+    }
+
+    /**
+     * Run the statement to start a new transaction.
      *
-     * @param  \PDO|\Closure  $pdo
-     * @param  string  $database
-     * @param  string  $tablePrefix
-     * @param  array  $config
      * @return void
      */
-    public function __construct($pdo, $database = '', $tablePrefix = '', array $config = [])
+    protected function executeBeginTransactionStatement()
     {
-        parent::__construct($pdo, $database, $tablePrefix, $config);
+        if (version_compare(PHP_VERSION, '8.4.0', '>=')) {
+            $mode = $this->getConfig('transaction_mode') ?? 'DEFERRED';
 
-        $enableForeignKeyConstraints = $this->getForeignKeyConstraintsConfigurationValue();
+            $this->getPdo()->exec("BEGIN {$mode} TRANSACTION");
 
-        if ($enableForeignKeyConstraints === null) {
             return;
         }
 
-        $schemaBuilder = $this->getSchemaBuilder();
-
-        try {
-            $enableForeignKeyConstraints
-                ? $schemaBuilder->enableForeignKeyConstraints()
-                : $schemaBuilder->disableForeignKeyConstraints();
-        } catch (QueryException $e) {
-            if (! $e->getPrevious() instanceof SQLiteDatabaseDoesNotExistException) {
-                throw $e;
-            }
-        }
+        $this->getPdo()->beginTransaction();
     }
 
     /**
@@ -65,7 +59,7 @@ class SQLiteConnection extends Connection
      */
     protected function isUniqueConstraintError(Exception $exception)
     {
-        return boolval(preg_match('#(column(s)? .* (is|are) not unique|UNIQUE constraint failed: .*)#i', $exception->getMessage()));
+        return (bool) preg_match('#(column(s)? .* (is|are) not unique|UNIQUE constraint failed: .*)#i', $exception->getMessage());
     }
 
     /**
@@ -75,9 +69,7 @@ class SQLiteConnection extends Connection
      */
     protected function getDefaultQueryGrammar()
     {
-        ($grammar = new QueryGrammar)->setConnection($this);
-
-        return $this->withTablePrefix($grammar);
+        return new QueryGrammar($this);
     }
 
     /**
@@ -101,9 +93,7 @@ class SQLiteConnection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        ($grammar = new SchemaGrammar)->setConnection($this);
-
-        return $this->withTablePrefix($grammar);
+        return new SchemaGrammar($this);
     }
 
     /**
@@ -127,15 +117,5 @@ class SQLiteConnection extends Connection
     protected function getDefaultPostProcessor()
     {
         return new SQLiteProcessor;
-    }
-
-    /**
-     * Get the database connection foreign key constraints configuration option.
-     *
-     * @return bool|null
-     */
-    protected function getForeignKeyConstraintsConfigurationValue()
-    {
-        return $this->getConfig('foreign_key_constraints');
     }
 }

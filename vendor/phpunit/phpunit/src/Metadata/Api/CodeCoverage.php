@@ -16,7 +16,6 @@ use function interface_exists;
 use function sprintf;
 use function str_starts_with;
 use function trait_exists;
-use PHPUnit\Event\Facade as EventFacade;
 use PHPUnit\Framework\CodeCoverageException;
 use PHPUnit\Framework\InvalidCoversTargetException;
 use PHPUnit\Metadata\Covers;
@@ -39,22 +38,24 @@ use SebastianBergmann\CodeUnit\InvalidCodeUnitException;
 use SebastianBergmann\CodeUnit\Mapper;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final class CodeCoverage
 {
     /**
-     * @psalm-var array<class-string, non-empty-list<class-string>>
+     * @var array<class-string, non-empty-list<class-string>>
      */
     private array $withParents = [];
 
     /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @psalm-return array<string,list<int>>|false
+     * @param class-string     $className
+     * @param non-empty-string $methodName
      *
      * @throws CodeCoverageException
+     *
+     * @return array<string,list<int>>|false
      */
     public function linesToBeCovered(string $className, string $methodName): array|false
     {
@@ -90,6 +91,7 @@ final class CodeCoverage
                 continue;
             }
 
+            /** @phpstan-ignore booleanOr.alwaysTrue */
             assert($metadata instanceof CoversClass || $metadata instanceof CoversTrait || $metadata instanceof CoversMethod || $metadata instanceof CoversFunction || $metadata instanceof Covers);
 
             if ($metadata->isCoversClass() || $metadata->isCoversTrait() || $metadata->isCoversMethod() || $metadata->isCoversFunction()) {
@@ -131,12 +133,12 @@ final class CodeCoverage
     }
 
     /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @psalm-return array<string,list<int>>
+     * @param class-string     $className
+     * @param non-empty-string $methodName
      *
      * @throws CodeCoverageException
+     *
+     * @return array<string,list<int>>
      */
     public function linesToBeUsed(string $className, string $methodName): array
     {
@@ -168,6 +170,7 @@ final class CodeCoverage
                 continue;
             }
 
+            /** @phpstan-ignore booleanOr.alwaysTrue */
             assert($metadata instanceof UsesClass || $metadata instanceof UsesTrait || $metadata instanceof UsesMethod || $metadata instanceof UsesFunction || $metadata instanceof Uses);
 
             if ($metadata->isUsesClass() || $metadata->isUsesTrait() || $metadata->isUsesMethod() || $metadata->isUsesFunction()) {
@@ -200,8 +203,8 @@ final class CodeCoverage
     }
 
     /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
+     * @param class-string     $className
+     * @param non-empty-string $methodName
      */
     public function shouldCodeCoverageBeCollectedFor(string $className, string $methodName): bool
     {
@@ -260,9 +263,9 @@ final class CodeCoverage
     }
 
     /**
-     * @psalm-return non-empty-list<non-empty-string>
-     *
      * @throws InvalidCoversTargetException
+     *
+     * @return non-empty-list<non-empty-string>
      */
     private function names(CoversClass|CoversFunction|CoversMethod|CoversTrait|UsesClass|UsesFunction|UsesMethod|UsesTrait $metadata): array
     {
@@ -293,24 +296,6 @@ final class CodeCoverage
             }
 
             assert(class_exists($names[0]) || trait_exists($names[0]));
-
-            if ($metadata->isCoversClass() && trait_exists($names[0])) {
-                EventFacade::emitter()->testRunnerTriggeredDeprecation(
-                    sprintf(
-                        'Targeting a trait such as %s with #[CoversClass] is deprecated, please refactor your test to use #[CoversTrait] instead.',
-                        $names[0],
-                    ),
-                );
-            }
-
-            if ($metadata->isUsesClass() && trait_exists($names[0])) {
-                EventFacade::emitter()->testRunnerTriggeredDeprecation(
-                    sprintf(
-                        'Targeting a trait such as %s with #[UsesClass] is deprecated, please refactor your test to use #[UsesTrait] instead.',
-                        $names[0],
-                    ),
-                );
-            }
 
             $reflector = new ReflectionClass($name);
 

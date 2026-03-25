@@ -8,36 +8,19 @@ use Illuminate\Contracts\Support\Jsonable;
 class NewAccessToken implements Arrayable, Jsonable
 {
     /**
-     * The access token instance.
-     *
-     * @var \Laravel\Sanctum\PersonalAccessToken
-     */
-    public $accessToken;
-
-    /**
-     * The plain text version of the token.
-     *
-     * @var string
-     */
-    public $plainTextToken;
-
-    /**
      * Create a new access token result.
      *
-     * @param  \Laravel\Sanctum\PersonalAccessToken  $accessToken
-     * @param  string  $plainTextToken
-     * @return void
+     * @param  \Laravel\Sanctum\PersonalAccessToken  $accessToken  The access token instance.
+     * @param  string  $plainTextToken  The plain text version of the token.
      */
-    public function __construct(PersonalAccessToken $accessToken, string $plainTextToken)
+    public function __construct(public PersonalAccessToken $accessToken, public string $plainTextToken)
     {
-        $this->accessToken = $accessToken;
-        $this->plainTextToken = $plainTextToken;
     }
 
     /**
      * Get the instance as an array.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function toArray()
     {

@@ -46,8 +46,6 @@ class ArgumentMetadata
 
     /**
      * Returns the type of the argument.
-     *
-     * The type is the PHP class in 5.5+ and additionally the basic type in PHP 7.0+.
      */
     public function getType(): ?string
     {
@@ -88,7 +86,7 @@ class ArgumentMetadata
     public function getDefaultValue(): mixed
     {
         if (!$this->hasDefaultValue) {
-            throw new \LogicException(sprintf('Argument $%s does not have a default value. Use "%s::hasDefaultValue()" to avoid this exception.', $this->name, __CLASS__));
+            throw new \LogicException(\sprintf('Argument $%s does not have a default value. Use "%s::hasDefaultValue()" to avoid this exception.', $this->name, __CLASS__));
         }
 
         return $this->defaultValue;

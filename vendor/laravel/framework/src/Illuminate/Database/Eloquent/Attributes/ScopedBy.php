@@ -11,9 +11,8 @@ class ScopedBy
      * Create a new attribute instance.
      *
      * @param  array|string  $classes
-     * @return void
      */
-    public function __construct(array|string $classes)
+    public function __construct(public array|string $classes)
     {
     }
 }

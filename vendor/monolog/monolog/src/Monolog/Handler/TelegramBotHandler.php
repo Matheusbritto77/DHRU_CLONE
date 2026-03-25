@@ -116,7 +116,7 @@ class TelegramBotHandler extends AbstractProcessingHandler
         ?bool   $disableNotification = null,
         bool   $splitLongMessages = false,
         bool   $delayBetweenMessages = false,
-        int    $topic = null
+        ?int   $topic = null
     ) {
         if (!\extension_loaded('curl')) {
             throw new MissingExtensionException('The curl extension is needed to use the TelegramBotHandler');
@@ -196,7 +196,7 @@ class TelegramBotHandler extends AbstractProcessingHandler
     /**
      * @return $this
      */
-    public function setTopic(int $topic = null): self
+    public function setTopic(?int $topic = null): self
     {
         $this->topic = $topic;
 
@@ -253,6 +253,10 @@ class TelegramBotHandler extends AbstractProcessingHandler
 
     protected function sendCurl(string $message): void
     {
+        if ('' === trim($message)) {
+            return;
+        }
+        
         $ch = curl_init();
         $url = self::BOT_API . $this->apiKey . '/SendMessage';
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -287,7 +291,7 @@ class TelegramBotHandler extends AbstractProcessingHandler
      */
     private function handleMessageLength(string $message): array
     {
-        $truncatedMarker = ' (...truncated)';
+        $truncatedMarker = ' (…truncated)';
         if (!$this->splitLongMessages && \strlen($message) > self::MAX_MESSAGE_LENGTH) {
             return [Utils::substr($message, 0, self::MAX_MESSAGE_LENGTH - \strlen($truncatedMarker)) . $truncatedMarker];
         }

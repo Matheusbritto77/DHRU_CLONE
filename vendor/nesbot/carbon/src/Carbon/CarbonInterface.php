@@ -14,6 +14,10 @@ declare(strict_types=1);
 namespace Carbon;
 
 use BadMethodCallException;
+use Carbon\Constants\DiffOptions;
+use Carbon\Constants\Format;
+use Carbon\Constants\TranslationOptions;
+use Carbon\Constants\UnitValue;
 use Carbon\Exceptions\BadComparisonUnitException;
 use Carbon\Exceptions\ImmutableException;
 use Carbon\Exceptions\InvalidDateException;
@@ -361,7 +365,7 @@ use Throwable;
  * @method        CarbonInterface  microseconds(int $value)                                                           Set current instance microsecond to the given value.
  * @method        CarbonInterface  microsecond(int $value)                                                            Set current instance microsecond to the given value.
  * @method        CarbonInterface  setMicroseconds(int $value)                                                        Set current instance microsecond to the given value.
- * @method        CarbonInterface  setMicrosecond(int $value)                                                         Set current instance microsecond to the given value.
+ * @method        self             setMicrosecond(int $value)                                                         Set current instance microsecond to the given value.
  * @method        CarbonInterface  addYears(int|float $value = 1)                                                     Add years (the $value count passed in) to the instance (using date interval).
  * @method        CarbonInterface  addYear()                                                                          Add one year to the instance (using date interval).
  * @method        CarbonInterface  subYears(int|float $value = 1)                                                     Sub years (the $value count passed in) to the instance (using date interval).
@@ -851,127 +855,8 @@ use Throwable;
  *
  * @codeCoverageIgnore
  */
-interface CarbonInterface extends DateTimeInterface, JsonSerializable
+interface CarbonInterface extends DateTimeInterface, JsonSerializable, DiffOptions, Format, TranslationOptions, UnitValue
 {
-    /**
-     * Diff wording options(expressed in octal).
-     */
-    public const NO_ZERO_DIFF = 01;
-    public const JUST_NOW = 02;
-    public const ONE_DAY_WORDS = 04;
-    public const TWO_DAY_WORDS = 010;
-    public const SEQUENTIAL_PARTS_ONLY = 020;
-    public const ROUND = 040;
-    public const FLOOR = 0100;
-    public const CEIL = 0200;
-
-    /**
-     * Diff syntax options.
-     */
-    public const DIFF_ABSOLUTE = 1; // backward compatibility with true
-    public const DIFF_RELATIVE_AUTO = 0; // backward compatibility with false
-    public const DIFF_RELATIVE_TO_NOW = 2;
-    public const DIFF_RELATIVE_TO_OTHER = 3;
-
-    /**
-     * Translate string options.
-     */
-    public const TRANSLATE_MONTHS = 1;
-    public const TRANSLATE_DAYS = 2;
-    public const TRANSLATE_UNITS = 4;
-    public const TRANSLATE_MERIDIEM = 8;
-    public const TRANSLATE_DIFF = 0x10;
-    public const TRANSLATE_ALL = self::TRANSLATE_MONTHS | self::TRANSLATE_DAYS | self::TRANSLATE_UNITS | self::TRANSLATE_MERIDIEM | self::TRANSLATE_DIFF;
-
-    /**
-     * The day constants.
-     */
-    public const SUNDAY = 0;
-    public const MONDAY = 1;
-    public const TUESDAY = 2;
-    public const WEDNESDAY = 3;
-    public const THURSDAY = 4;
-    public const FRIDAY = 5;
-    public const SATURDAY = 6;
-
-    /**
-     * The month constants.
-     * These aren't used by Carbon itself but exist for
-     * convenience sake alone.
-     */
-    public const JANUARY = 1;
-    public const FEBRUARY = 2;
-    public const MARCH = 3;
-    public const APRIL = 4;
-    public const MAY = 5;
-    public const JUNE = 6;
-    public const JULY = 7;
-    public const AUGUST = 8;
-    public const SEPTEMBER = 9;
-    public const OCTOBER = 10;
-    public const NOVEMBER = 11;
-    public const DECEMBER = 12;
-
-    /**
-     * Number of X in Y.
-     */
-    public const YEARS_PER_MILLENNIUM = 1_000;
-    public const YEARS_PER_CENTURY = 100;
-    public const YEARS_PER_DECADE = 10;
-    public const MONTHS_PER_YEAR = 12;
-    public const MONTHS_PER_QUARTER = 3;
-    public const QUARTERS_PER_YEAR = 4;
-    public const WEEKS_PER_YEAR = 52;
-    public const WEEKS_PER_MONTH = 4;
-    public const DAYS_PER_YEAR = 365;
-    public const DAYS_PER_WEEK = 7;
-    public const HOURS_PER_DAY = 24;
-    public const MINUTES_PER_HOUR = 60;
-    public const SECONDS_PER_MINUTE = 60;
-    public const MILLISECONDS_PER_SECOND = 1_000;
-    public const MICROSECONDS_PER_MILLISECOND = 1_000;
-    public const MICROSECONDS_PER_SECOND = 1_000_000;
-
-    /**
-     * Special settings to get the start of week from current locale culture.
-     */
-    public const WEEK_DAY_AUTO = 'auto';
-
-    /**
-     * RFC7231 DateTime format.
-     *
-     * @var string
-     */
-    public const RFC7231_FORMAT = 'D, d M Y H:i:s \G\M\T';
-
-    /**
-     * Default format to use for __toString method when type juggling occurs.
-     *
-     * @var string
-     */
-    public const DEFAULT_TO_STRING_FORMAT = 'Y-m-d H:i:s';
-
-    /**
-     * Format for converting mocked time, includes microseconds.
-     *
-     * @var string
-     */
-    public const MOCK_DATETIME_FORMAT = 'Y-m-d H:i:s.u';
-
-    /**
-     * Pattern detection for ->isoFormat and ::createFromIsoFormat.
-     *
-     * @var string
-     */
-    public const ISO_FORMAT_REGEXP = '(O[YMDHhms]|[Hh]mm(ss)?|Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Qo?|YYYYYY|YYYYY|YYYY|YY?|g{1,5}|G{1,5}|e|E|a|A|hh?|HH?|kk?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?)';
-
-    /**
-     * Default locale (language and region).
-     *
-     * @var string
-     */
-    public const DEFAULT_LOCALE = 'en';
-
     // <methods>
 
     /**
@@ -1055,15 +940,6 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public static function __set_state($dump): static;
 
     /**
-     * Returns the list of properties to dump on serialize() called on.
-     *
-     * Only used by PHP < 7.4.
-     *
-     * @return array
-     */
-    public function __sleep();
-
-    /**
      * Format the instance as a string using the set format
      *
      * @example
@@ -1080,9 +956,9 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @example $date->add(15, 'days')
      * @example $date->add(CarbonInterval::days(4))
      *
-     * @param Unit|string|DateInterval|Closure|CarbonConverterInterface $unit
-     * @param int|float                                                 $value
-     * @param bool|null                                                 $overflow
+     * @param Unit|int|string|DateInterval|Closure|CarbonConverterInterface $unit
+     * @param Unit|int|float|string                                         $value
+     * @param bool|null                                                     $overflow
      *
      * @return static
      */
@@ -1358,7 +1234,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function create($year = 0, $month = 1, $day = 1, $hour = 0, $minute = 0, $second = 0, $timezone = null);
+    public static function create($year = 0, $month = 1, $day = 1, $hour = 0, $minute = 0, $second = 0, $timezone = null): ?static;
 
     /**
      * Create a Carbon instance from just a date. The time portion is set to now.
@@ -1386,7 +1262,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @return static|null
      */
     #[ReturnTypeWillChange]
-    public static function createFromFormat($format, $time, $timezone = null);
+    public static function createFromFormat($format, $time, $timezone = null): ?static;
 
     /**
      * Create a Carbon instance from a specific ISO format (same replacements as ->isoFormat()).
@@ -1401,7 +1277,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function createFromIsoFormat(string $format, string $time, $timezone = null, ?string $locale = 'en', ?TranslatorInterface $translator = null);
+    public static function createFromIsoFormat(string $format, string $time, $timezone = null, ?string $locale = 'en', ?TranslatorInterface $translator = null): ?static;
 
     /**
      * Create a Carbon instance from a specific format and a string in a given language.
@@ -1415,7 +1291,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function createFromLocaleFormat(string $format, string $locale, string $time, $timezone = null);
+    public static function createFromLocaleFormat(string $format, string $locale, string $time, $timezone = null): ?static;
 
     /**
      * Create a Carbon instance from a specific ISO format and a string in a given language.
@@ -1429,7 +1305,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function createFromLocaleIsoFormat(string $format, string $locale, string $time, $timezone = null);
+    public static function createFromLocaleIsoFormat(string $format, string $locale, string $time, $timezone = null): ?static;
 
     /**
      * Create a Carbon instance from just a time. The date portion is set to today.
@@ -1457,6 +1333,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * Timestamp input can be given as int, float or a string containing one or more numbers.
      */
+    #[ReturnTypeWillChange]
     public static function createFromTimestamp(string|int|float $timestamp, DateTimeZone|string|int|null $timezone = null): static;
 
     /**
@@ -1525,7 +1402,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function createSafe($year = null, $month = null, $day = null, $hour = null, $minute = null, $second = null, $timezone = null);
+    public static function createSafe($year = null, $month = null, $day = null, $hour = null, $minute = null, $second = null, $timezone = null): ?static;
 
     /**
      * Create a new Carbon instance from a specific date and time using strict validation.
@@ -1625,7 +1502,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *                                                            ⦿ 'altNumbers' entry, use alternative numbers if available
      *                                                            ` (from the current language if true is passed, from the given language(s)
      *                                                            ` if array or string is passed)
-     *                                                            - 'join' entry determines how to join multiple parts of the string
+     *                                                            ⦿ 'join' entry determines how to join multiple parts of the string
      *                                                            `  - if $join is a string, it's used as a joiner glue
      *                                                            `  - if $join is a callable/closure, it get the list of string and should return a string
      *                                                            `  - if $join is an array, the first item will be the default glue, and the second item
@@ -1635,7 +1512,9 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *                                                            ⦿ 'other' entry (see above)
      *                                                            ⦿ 'minimumUnit' entry determines the smallest unit of time to display can be long or
      *                                                            `  short form of the units, e.g. 'hour' or 'h' (default value: s)
-     *                                                            if int passed, it add modifiers:
+     *                                                            ⦿ 'locale' language in which the diff should be output (has no effect if 'translator' key is set)
+     *                                                            ⦿ 'translator' a custom translator to use to translator the output.
+     *                                                            if int passed, it adds modifiers:
      *                                                            Possible values:
      *                                                            - CarbonInterface::DIFF_ABSOLUTE          no modifiers
      *                                                            - CarbonInterface::DIFF_RELATIVE_TO_NOW   add ago/from now modifier
@@ -1826,11 +1705,11 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @example
      * ```
      * echo Carbon::parse('2018-07-25 12:45:16.334455')
-     *   ->startOf('month')
-     *   ->endOf('week', Carbon::FRIDAY);
+     *   ->startOf(Unit::Month)
+     *   ->endOf(Unit::Week, Carbon::FRIDAY);
      * ```
      */
-    public function endOf(string $unit, mixed ...$params): static;
+    public function endOf(Unit|string $unit, mixed ...$params): static;
 
     /**
      * Resets the date to end of the century and time to 23:59:59.999999
@@ -1891,6 +1770,18 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public function endOfMillennium();
 
     /**
+     * Modify to end of current millisecond, microseconds such as 12345 become 123999
+     *
+     * @example
+     * ```
+     * echo Carbon::parse('2018-07-25 12:45:16.334455')
+     *   ->endOfSecond()
+     *   ->format('H:i:s.u');
+     * ```
+     */
+    public function endOfMillisecond(): static;
+
+    /**
      * Modify to end of current minute, seconds become 59
      *
      * @example
@@ -1946,7 +1837,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * echo Carbon::parse('2018-07-25 12:45:16')->endOfWeek(Carbon::SATURDAY) . "\n";
      * ```
      *
-     * @param WeekDay|int|null $weekEndsAt optional start allow you to specify the day of week to use to end the week
+     * @param WeekDay|int|null $weekEndsAt optional end allow you to specify the day of week to use to end the week
      *
      * @return static
      */
@@ -2133,13 +2024,22 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     /**
      * Create an instance from a serialized string.
      *
-     * @param string $value
+     * If $value is not from a trusted source, consider using the allowed_classes option to limit
+     * the types of objects that can be built, for instance:
+     *
+     * @example
+     * ```php
+     * $object = Carbon::fromSerialized($value, ['allowed_classes' => [Carbon::class, CarbonImmutable::class]]);
+     * ```
+     *
+     * @param \Stringable|string $value
+     * @param array              $options example: ['allowed_classes' => [CarbonImmutable::class]]
      *
      * @throws InvalidFormatException
      *
      * @return static
      */
-    public static function fromSerialized($value): static;
+    public static function fromSerialized($value, array $options = []): static;
 
     /**
      * Register a custom macro.
@@ -2661,6 +2561,11 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public function isDayOfWeek($dayOfWeek): bool;
 
     /**
+     * Determines if the instance is end of century (last day by default but interval can be customized).
+     */
+    public function isEndOfCentury(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
      * Check if the instance is end of day.
      *
      * @example
@@ -2674,9 +2579,53 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * Carbon::parse('2019-02-28 23:59:59')->isEndOfDay(true); // false
      * ```
      *
-     * @param bool $checkMicroseconds check time at microseconds precision
+     * @param bool                                                           $checkMicroseconds check time at microseconds precision
+     * @param Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval          if an interval is specified it will be used as precision
+     *                                                                                          for instance with "15 minutes", it checks if current date-time
+     *                                                                                          is in the last 15 minutes of the day, with Unit::Hour, it
+     *                                                                                          checks if it's in the last hour of the day.
      */
-    public function isEndOfDay(bool $checkMicroseconds = false): bool;
+    public function isEndOfDay(Unit|DateInterval|Closure|CarbonConverterInterface|string|bool $checkMicroseconds = false, Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of decade (last day by default but interval can be customized).
+     */
+    public function isEndOfDecade(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of hour (last microsecond by default but interval can be customized).
+     */
+    public function isEndOfHour(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of millennium (last day by default but interval can be customized).
+     */
+    public function isEndOfMillennium(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of millisecond (last microsecond by default but interval can be customized).
+     */
+    public function isEndOfMillisecond(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of minute (last microsecond by default but interval can be customized).
+     */
+    public function isEndOfMinute(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of month (last day by default but interval can be customized).
+     */
+    public function isEndOfMonth(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of quarter (last day by default but interval can be customized).
+     */
+    public function isEndOfQuarter(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is end of second (last microsecond by default but interval can be customized).
+     */
+    public function isEndOfSecond(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
 
     /**
      * Returns true if the date was created using CarbonImmutable::endOfTime()
@@ -2684,6 +2633,33 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @return bool
      */
     public function isEndOfTime(): bool;
+
+    /**
+     * Check if the instance is end of a given unit (tolerating a given interval).
+     *
+     * @example
+     * ```
+     * // Check if a date-time is the last 15 minutes of the hour it's in
+     * Carbon::parse('2019-02-28 20:13:00')->isEndOfUnit(Unit::Hour, '15 minutes'); // false
+     * ```
+     */
+    public function isEndOfUnit(Unit $unit, Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null, mixed ...$params): bool;
+
+    /**
+     * Determines if the instance is end of week (last day by default but interval can be customized).
+     *
+     * @example
+     * ```
+     * Carbon::parse('2024-08-31')->endOfWeek()->isEndOfWeek(); // true
+     * Carbon::parse('2024-08-31')->isEndOfWeek(); // false
+     * ```
+     */
+    public function isEndOfWeek(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null, WeekDay|int|null $weekEndsAt = null): bool;
+
+    /**
+     * Determines if the instance is end of year (last day by default but interval can be customized).
+     */
+    public function isEndOfYear(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
 
     /**
      * Determines if the instance is in the future, ie. greater (after) than now.
@@ -2800,6 +2776,30 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public static function isMutable(): bool;
 
     /**
+     * Determines if the instance is now or in the future, ie. greater (after) than or equal to now.
+     *
+     * @example
+     * ```
+     * Carbon::now()->isNowOrFuture(); // true
+     * Carbon::now()->addHours(5)->isNowOrFuture(); // true
+     * Carbon::now()->subHours(5)->isNowOrFuture(); // false
+     * ```
+     */
+    public function isNowOrFuture(): bool;
+
+    /**
+     * Determines if the instance is now or in the past, ie. less (before) than or equal to now.
+     *
+     * @example
+     * ```
+     * Carbon::now()->isNowOrPast(); // true
+     * Carbon::now()->subHours(5)->isNowOrPast(); // true
+     * Carbon::now()->addHours(5)->isNowOrPast(); // false
+     * ```
+     */
+    public function isNowOrPast(): bool;
+
+    /**
      * Determines if the instance is in the past, ie. less (before) than now.
      *
      * @example
@@ -2879,6 +2879,11 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public function isSameUnit(string $unit, DateTimeInterface|string $date): bool;
 
     /**
+     * Determines if the instance is start of century (first day by default but interval can be customized).
+     */
+    public function isStartOfCentury(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
      * Check if the instance is start of day / midnight.
      *
      * @example
@@ -2890,9 +2895,53 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * Carbon::parse('2019-02-28 00:00:00.000012')->isStartOfDay(true); // false
      * ```
      *
-     * @param bool $checkMicroseconds check time at microseconds precision
+     * @param bool                                                           $checkMicroseconds check time at microseconds precision
+     * @param Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval          if an interval is specified it will be used as precision
+     *                                                                                          for instance with "15 minutes", it checks if current date-time
+     *                                                                                          is in the last 15 minutes of the day, with Unit::Hour, it
+     *                                                                                          checks if it's in the last hour of the day.
      */
-    public function isStartOfDay(bool $checkMicroseconds = false): bool;
+    public function isStartOfDay(Unit|DateInterval|Closure|CarbonConverterInterface|string|bool $checkMicroseconds = false, Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of decade (first day by default but interval can be customized).
+     */
+    public function isStartOfDecade(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of hour (first microsecond by default but interval can be customized).
+     */
+    public function isStartOfHour(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of millennium (first day by default but interval can be customized).
+     */
+    public function isStartOfMillennium(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of millisecond (first microsecond by default but interval can be customized).
+     */
+    public function isStartOfMillisecond(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of minute (first microsecond by default but interval can be customized).
+     */
+    public function isStartOfMinute(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of month (first day by default but interval can be customized).
+     */
+    public function isStartOfMonth(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of quarter (first day by default but interval can be customized).
+     */
+    public function isStartOfQuarter(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
+
+    /**
+     * Determines if the instance is start of second (first microsecond by default but interval can be customized).
+     */
+    public function isStartOfSecond(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
 
     /**
      * Returns true if the date was created using CarbonImmutable::startOfTime()
@@ -2900,6 +2949,33 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @return bool
      */
     public function isStartOfTime(): bool;
+
+    /**
+     * Check if the instance is start of a given unit (tolerating a given interval).
+     *
+     * @example
+     * ```
+     * // Check if a date-time is the first 15 minutes of the hour it's in
+     * Carbon::parse('2019-02-28 20:13:00')->isStartOfUnit(Unit::Hour, '15 minutes'); // true
+     * ```
+     */
+    public function isStartOfUnit(Unit $unit, Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null, mixed ...$params): bool;
+
+    /**
+     * Determines if the instance is start of week (first day by default but interval can be customized).
+     *
+     * @example
+     * ```
+     * Carbon::parse('2024-08-31')->startOfWeek()->isStartOfWeek(); // true
+     * Carbon::parse('2024-08-31')->isStartOfWeek(); // false
+     * ```
+     */
+    public function isStartOfWeek(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null, WeekDay|int|null $weekStartsAt = null): bool;
+
+    /**
+     * Determines if the instance is start of year (first day by default but interval can be customized).
+     */
+    public function isStartOfYear(Unit|DateInterval|Closure|CarbonConverterInterface|string|null $interval = null): bool;
 
     /**
      * Returns true if the strict mode is globally in use, false else.
@@ -3185,6 +3261,8 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * });
      * echo Carbon::yesterday()->hours(11)->userFormat();
      * ```
+     *
+     * @param-closure-this static $macro
      */
     public static function macro(string $name, ?callable $macro): void;
 
@@ -3200,7 +3278,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function make($var);
+    public static function make($var, DateTimeZone|string|null $timezone = null): ?static;
 
     /**
      * Get the maximum instance between a given instance (default now) and the current instance.
@@ -3486,7 +3564,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @return static|null
      */
-    public static function rawCreateFromFormat(string $format, string $time, $timezone = null);
+    public static function rawCreateFromFormat(string $format, string $time, $timezone = null): ?static;
 
     /**
      * @see https://php.net/manual/en/datetime.format.php
@@ -3883,11 +3961,11 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @example
      * ```
      * echo Carbon::parse('2018-07-25 12:45:16.334455')
-     *   ->startOf('month')
-     *   ->endOf('week', Carbon::FRIDAY);
+     *   ->startOf(Unit::Month)
+     *   ->endOf(Unit::Week, Carbon::FRIDAY);
      * ```
      */
-    public function startOf(string $unit, mixed ...$params): static;
+    public function startOf(Unit|string $unit, mixed ...$params): static;
 
     /**
      * Resets the date to the first day of the century and the time to 00:00:00
@@ -3946,6 +4024,18 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @return static
      */
     public function startOfMillennium();
+
+    /**
+     * Modify to start of current millisecond, microseconds such as 12345 become 123000
+     *
+     * @example
+     * ```
+     * echo Carbon::parse('2018-07-25 12:45:16.334455')
+     *   ->startOfSecond()
+     *   ->format('H:i:s.u');
+     * ```
+     */
+    public function startOfMillisecond(): static;
 
     /**
      * Modify to start of current minute, seconds become 0
@@ -4028,9 +4118,9 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      * @example $date->sub(15, 'days')
      * @example $date->sub(CarbonInterval::days(4))
      *
-     * @param Unit|string|DateInterval|Closure|CarbonConverterInterface $unit
-     * @param int|float                                                 $value
-     * @param bool|null                                                 $overflow
+     * @param Unit|int|string|DateInterval|Closure|CarbonConverterInterface $unit
+     * @param Unit|int|float|string                                         $value
+     * @param bool|null                                                     $overflow
      *
      * @return static
      */
@@ -4080,9 +4170,9 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
      *
      * @see sub()
      *
-     * @param string|DateInterval $unit
-     * @param int|float           $value
-     * @param bool|null           $overflow
+     * @param Unit|int|string|DateInterval $unit
+     * @param Unit|int|float|string        $value
+     * @param bool|null                    $overflow
      *
      * @return static
      */
@@ -4551,7 +4641,7 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
     public static function translateTimeString(string $timeString, ?string $from = null, ?string $to = null, int $mode = self::TRANSLATE_ALL): string;
 
     /**
-     * Translate a time string from the current locale (`$date->locale()`) to an other.
+     * Translate a time string from the current locale (`$date->locale()`) to another one.
      *
      * @param string      $timeString time string to translate
      * @param string|null $to         output locale of the result returned ("en" by default)
@@ -4580,6 +4670,8 @@ interface CarbonInterface extends DateTimeInterface, JsonSerializable
 
     /**
      * Set the timezone or returns the timezone name if no arguments passed.
+     *
+     * @return ($value is null ? string : static)
      */
     public function tz(DateTimeZone|string|int|null $value = null): static|string;
 

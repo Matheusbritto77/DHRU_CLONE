@@ -5,6 +5,7 @@ namespace Illuminate\Config;
 use ArrayAccess;
 use Illuminate\Contracts\Config\Repository as ConfigContract;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
 use InvalidArgumentException;
 
@@ -15,7 +16,7 @@ class Repository implements ArrayAccess, ConfigContract
     /**
      * All of the configuration items.
      *
-     * @var array
+     * @var array<string,mixed>
      */
     protected $items = [];
 
@@ -23,7 +24,6 @@ class Repository implements ArrayAccess, ConfigContract
      * Create a new configuration repository.
      *
      * @param  array  $items
-     * @return void
      */
     public function __construct(array $items = [])
     {
@@ -60,8 +60,8 @@ class Repository implements ArrayAccess, ConfigContract
     /**
      * Get many configuration values.
      *
-     * @param  array  $keys
-     * @return array
+     * @param  array<string|int,mixed>  $keys
+     * @return array<string,mixed>
      */
     public function getMany($keys)
     {
@@ -84,6 +84,8 @@ class Repository implements ArrayAccess, ConfigContract
      * @param  string  $key
      * @param  (\Closure():(string|null))|string|null  $default
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     public function string(string $key, $default = null): string
     {
@@ -104,6 +106,8 @@ class Repository implements ArrayAccess, ConfigContract
      * @param  string  $key
      * @param  (\Closure():(int|null))|int|null  $default
      * @return int
+     *
+     * @throws \InvalidArgumentException
      */
     public function integer(string $key, $default = null): int
     {
@@ -124,6 +128,8 @@ class Repository implements ArrayAccess, ConfigContract
      * @param  string  $key
      * @param  (\Closure():(float|null))|float|null  $default
      * @return float
+     *
+     * @throws \InvalidArgumentException
      */
     public function float(string $key, $default = null): float
     {
@@ -144,6 +150,8 @@ class Repository implements ArrayAccess, ConfigContract
      * @param  string  $key
      * @param  (\Closure():(bool|null))|bool|null  $default
      * @return bool
+     *
+     * @throws \InvalidArgumentException
      */
     public function boolean(string $key, $default = null): bool
     {
@@ -164,6 +172,8 @@ class Repository implements ArrayAccess, ConfigContract
      * @param  string  $key
      * @param  (\Closure():(array<array-key, mixed>|null))|array<array-key, mixed>|null  $default
      * @return array<array-key, mixed>
+     *
+     * @throws \InvalidArgumentException
      */
     public function array(string $key, $default = null): array
     {
@@ -176,6 +186,18 @@ class Repository implements ArrayAccess, ConfigContract
         }
 
         return $value;
+    }
+
+    /**
+     * Get the specified array configuration value as a collection.
+     *
+     * @param  string  $key
+     * @param  (\Closure():(array<array-key, mixed>|null))|array<array-key, mixed>|null  $default
+     * @return Collection<array-key, mixed>
+     */
+    public function collection(string $key, $default = null): Collection
+    {
+        return new Collection($this->array($key, $default));
     }
 
     /**

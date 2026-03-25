@@ -1,13 +1,55 @@
 {
+  "_AppLayout-Dzb2gdoP.js": {
+    "file": "assets/AppLayout-Dzb2gdoP.js",
+    "name": "AppLayout",
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-CX21lpf5.css",
+    "file": "assets/app-BFxa1t9b.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/js/Pages/Credits.vue": {
+    "file": "assets/Credits-DULwR-bh.js",
+    "name": "Credits",
+    "src": "resources/js/Pages/Credits.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_AppLayout-Dzb2gdoP.js"
+    ]
+  },
+  "resources/js/Pages/Dashboard.vue": {
+    "file": "assets/Dashboard-BG-e6QuJ.js",
+    "name": "Dashboard",
+    "src": "resources/js/Pages/Dashboard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_AppLayout-Dzb2gdoP.js",
+      "resources/js/app.js"
+    ]
+  },
+  "resources/js/Pages/Welcome.vue": {
+    "file": "assets/Welcome-DzDT-a6z.js",
+    "name": "Welcome",
+    "src": "resources/js/Pages/Welcome.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_AppLayout-Dzb2gdoP.js"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-C1-XIpUa.js",
+    "file": "assets/app-BO3l50Q4.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/Pages/Credits.vue",
+      "resources/js/Pages/Dashboard.vue",
+      "resources/js/Pages/Welcome.vue"
+    ]
   }
 }

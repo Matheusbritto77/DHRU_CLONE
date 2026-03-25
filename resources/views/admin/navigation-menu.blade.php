@@ -1,283 +1,169 @@
-<nav x-data="{ openModal: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <!-- Left Side -->
-            <div class="flex items-center">
-                <!-- Logo -->
-                <div class="flex-shrink-0 ml-4">
-                    <a href="{{ route('dashboard') }}">
-                        <img src="logo.png" class="block h-9 w-auto" alt="Your Logo">
-                    </a>
-                </div>
-            </div>
-
-            <!-- Right Side -->
-            <div class="flex items-center ml-auto space-x-4">
-                <!-- Dashboard Link -->
-                <div class="hidden sm:flex sm:items-center">
-                    <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
-                
-                 <!-- Right Side -->
-            <div class="flex items-center ml-auto space-x-4">
-                <!-- Dashboard Link -->
-                <div class="hidden sm:flex sm:items-center">
-                    <x-nav-link href="{{ route('admin.order.history') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('History') }}
-                    </x-nav-link>
-                </div>
-                
-                
-
-               <!-- Dropdown -->
-<x-dropdown align="right" width="60">
-    <!-- Dropdown Trigger -->
-    <x-slot name="trigger">
-        <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-            Serviços
-            <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-            </svg>
+<!-- Menu Lateral (Sidebar Desktop & Mobile) -->
+<aside x-data="{ openModal: false }" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-72 bg-white/90 dark:bg-[#1d1d1f]/90 backdrop-blur-[30px] border-r border-gray-100 dark:border-gray-800/60 transform lg:translate-x-0 transition-transform duration-300 ease-[cubic-bezier(0.4,0.0,0.2,1)] flex flex-col shadow-2xl lg:shadow-[4px_0_24px_rgba(0,0,0,0.02)] lg:relative shrink-0">
+    
+    <!-- Cabeçalho Lateral / Logo -->
+    <div class="h-[88px] flex justify-between items-center px-6 border-b border-gray-100 dark:border-gray-800/80 shrink-0">
+        <a href="{{ route('dashboard') }}" class="block">
+            <img src="{{ asset('logo.png') }}" class="block max-h-12 w-auto object-contain rounded-xl shadow-sm" alt="BR Server" onerror="this.src='{{ asset('logo3.jpg') }}'">
+        </a>
+        <!-- Botão p/ fechar menu nativo no mobile visível -->
+        <button @click="sidebarOpen = false" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500">
+            <i class="fas fa-times"></i>
         </button>
-    </x-slot>
-
-    <!-- Dropdown Content -->
-    <x-slot name="content">
-        <div class="w-60">
-            <!-- Botão para abrir o modal de Alterar margens de lucro -->
-            <button @click="openModal = true" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none">
-                Alterar margens de lucro
-            </button>
-
-            <!-- Botão para abrir a rota 'admin/imei-service' -->
-            <button onclick="window.location.href='{{ route('Admin.services') }}'" class="w-full mt-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none">
-                Editar serviços
-            </button>
-        </div>
-    </x-slot>
-</x-dropdown>
-
-
-
-                <!-- Make Order Dropdown -->
- <div class="relative">
-                    <x-dropdown align="right" width="60">
-                        <!-- Dropdown Trigger -->
-                        <x-slot name="trigger">
-                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-                               API
-                                <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                </svg>
-                            </button>
-                        </x-slot>
-                        <!-- Dropdown Content -->
-                        <x-slot name="content">
-                            <div class="w-60">
-                            <x-dropdown-link href="{{ route('imei.index') }}">
-                                 Conectar api dhru
-                            </x-dropdown-link>
-
-                                <x-dropdown-link href="server-services">
-                                    EDITAR Servicos
-                                </x-dropdown-link>
-                                <!-- Add more links as needed -->
-                            </div>
-                        </x-slot>
-                    </x-dropdown>
-                </div>
-
-
-
-
-
-                <div class="relative">
-    <x-dropdown align="right" width="60">
-        <!-- Dropdown Trigger -->
-        <x-slot name="trigger">
-            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-            creditos
-                <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                </svg>
-            </button>
-        </x-slot>
-        
-        <!-- Dropdown Content -->
-        <x-slot name="content">
-            <div class="w-60">
-                <x-dropdown-link href="{{ route('imei.history') }}">
-                    adicionar credito
-                </x-dropdown-link>
-
-                <x-dropdown-link href="{{ route('Server.history') }}">
-                    remover credito
-                </x-dropdown-link>
-                <!-- Add more links as needed -->
-            </div>
-        </x-slot>
-    </x-dropdown>
-</div>
-
-
-
-                <!-- Teams Dropdown -->
-                @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
-                    <div class="relative">
-                        <x-dropdown align="right" width="60">
-                            <!-- Dropdown Trigger -->
-                            <x-slot name="trigger">
-                                <span class="inline-flex rounded-md">
-                                    <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-                                        {{ Auth::user()->currentTeam->name }}
-                                        <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                        </svg>
-                                    </button>
-                                </span>
-                            </x-slot>
-                            <!-- Dropdown Content -->
-                            <x-slot name="content">
-                                <div class="w-60">
-                                    <x-dropdown-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
-                                        {{ __('Team Settings') }}
-                                    </x-dropdown-link>
-                                    @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                                        <x-dropdown-link href="{{ route('teams.create') }}">
-                                            {{ __('Create New Team') }}
-                                        </x-dropdown-link>
-                                    @endcan
-                                    @if (Auth::user()->allTeams()->count() > 1)
-                                        <div class="border-t border-gray-200"></div>
-                                        <div class="block px-4 py-2 text-xs text-gray-400">
-                                            {{ __('Switch Teams') }}
-                                        </div>
-                                        @foreach (Auth::user()->allTeams() as $team)
-                                            <x-switchable-team :team="$team" />
-                                        @endforeach
-                                    @endif
-                                </div>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
-                @endif
-
-                <!-- Profile Dropdown -->
-<div class="relative">
-    <x-dropdown align="right" width="48">
-        <!-- Dropdown Trigger -->
-        <x-slot name="trigger">
-            @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
-                <button class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
-                    <img class="h-8 w-8 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
-                </button>
-            @else
-                <span class="inline-flex rounded-md">
-                    <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-                        {{ Auth::user()->name }}
-                        <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </button>
-                </span>
-            @endif
-        </x-slot>
-        <!-- Dropdown Content -->
-        <x-slot name="content">
-            <div class="block px-4 py-2 text-xs text-gray-400">
-                {{ __('Manage Account') }}
-            </div>
-            <x-dropdown-link href="{{ route('profile.show') }}">
-                {{ __('Profile') }}
-            </x-dropdown-link>
-            @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                <x-dropdown-link href="{{ route('api-tokens.index') }}">
-                    {{ __('API Tokens') }}
-                </x-dropdown-link>
-            @endif
-            <div class="border-t border-gray-200"></div>
-            <!-- Logout -->
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <x-dropdown-link href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
-                    {{ __('Log Out') }}
-                </x-dropdown-link>
-            </form>
-        </x-slot>
-    </x-dropdown>
-</div>
-
-<!-- Display Total Credits -->
-<div class="ml-4 text-sm text-gray-500">
-    Credits: {{ app('App\Http\Controllers\CreditController')->getTotalCredits() }}
-</div>
-
-
-                <!-- Hamburger -->
-                <div class="-mr-2 flex items-center sm:hidden">
-                    <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-        </div>
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+    <!-- Navegação e Links (Rolável via Y) -->
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-2 custom-scrollbar">
+        
+        <p class="px-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-2 mb-2">Principal</p>
+        
+        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-[16px] transition-all duration-200 {{ request()->routeIs('dashboard') ? 'bg-apple-blue shadow-md text-white font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+            <i class="fas fa-chart-pie w-6 flex justify-center text-[18px] {{ request()->routeIs('dashboard') ? 'text-white' : '' }}"></i>
+            <span class="text-[15px]">Painel de Controle</span>
+        </a>
+
+        <a href="{{ route('admin.order.history') }}" class="flex items-center space-x-3 px-4 py-3 rounded-[16px] transition-all duration-200 {{ request()->routeIs('admin.order.history') ? 'bg-apple-blue shadow-md text-white font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+            <i class="fas fa-clock-rotate-left w-6 flex justify-center text-[18px] {{ request()->routeIs('admin.order.history') ? 'text-white' : '' }}"></i>
+            <span class="text-[15px]">Histórico Administrativo</span>
+        </a>
+
+        <p class="px-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-8 mb-2">Gerenciamento</p>
+
+        <!-- Dropdowns convertidos em Accordions Laterais -->
+        <!-- Seção: Serviços -->
+        <div x-data="{ expanded: false }" class="mt-2 text-sm">
+            <button @click="expanded = !expanded" class="w-full flex items-center justify-between px-4 py-3 rounded-[16px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all duration-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-layer-group w-6 flex justify-center text-[18px]"></i>
+                    <span class="text-[15px] font-medium">Serviços</span>
+                </div>
+                <i class="fas fa-chevron-down text-[12px] transform transition-transform" :class="expanded ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="expanded" x-collapse x-transition.opacity class="pl-13 pr-4 space-y-1 block mt-1 ml-4 border-l-2 border-gray-100 dark:border-gray-800 py-1">
+                <button @click="openModal = true" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-apple-blue rounded-[12px] hover:bg-apple-blue/10 dark:hover:bg-apple-blue/20 transition-colors flex items-center">
+                    <i class="fas fa-percentage text-[10px] mr-3"></i> Margens de lucro
+                </button>
+                <a href="{{ route('Admin.services') }}" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-apple-blue rounded-[12px] hover:bg-apple-blue/10 dark:hover:bg-apple-blue/20 transition-colors flex items-center">
+                    <i class="fas fa-edit text-[10px] mr-3"></i> Editar serviços
+                </a>
             </div>
-            <div class="mt-3 space-y-1">
-                @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
-                    <x-responsive-nav-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}" :active="request()->routeIs('teams.show')">
-                        {{ __('Team Settings') }}
-                    </x-responsive-nav-link>
-                    @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                        <x-responsive-nav-link href="{{ route('teams.create') }}" :active="request()->routeIs('teams.create')">
-                            {{ __('Create New Team') }}
-                        </x-responsive-nav-link>
-                    @endcan
-                    <div class="border-t border-gray-200"></div>
-                    <div class="block px-4 py-2 text-xs text-gray-400">
-                        {{ __('Switch Teams') }}
+        </div>
+
+        <!-- Seção: API -->
+        <div x-data="{ expanded: false }" class="mt-2 text-sm">
+            <button @click="expanded = !expanded" class="w-full flex items-center justify-between px-4 py-3 rounded-[16px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all duration-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-plug w-6 flex justify-center text-[18px]"></i>
+                    <span class="text-[15px] font-medium">Conexão API</span>
+                </div>
+                <i class="fas fa-chevron-down text-[12px] transform transition-transform" :class="expanded ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="expanded" x-collapse x-transition.opacity class="pl-13 pr-4 space-y-1 block mt-1 ml-4 border-l-2 border-gray-100 dark:border-gray-800 py-1">
+                <a href="{{ route('imei.index') }}" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-apple-blue rounded-[12px] hover:bg-apple-blue/10 dark:hover:bg-apple-blue/20 transition-colors flex items-center">
+                    <i class="fas fa-link text-[10px] mr-3"></i> Conectar API Dhru
+                </a>
+                <a href="server-services" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-apple-blue rounded-[12px] hover:bg-apple-blue/10 dark:hover:bg-apple-blue/20 transition-colors flex items-center">
+                    <i class="fas fa-edit text-[10px] mr-3"></i> Editar API
+                </a>
+            </div>
+        </div>
+
+        <!-- Seção: Créditos -->
+        <div x-data="{ expanded: false }" class="mt-2 text-sm">
+            <button @click="expanded = !expanded" class="w-full flex items-center justify-between px-4 py-3 rounded-[16px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all duration-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-wallet w-6 flex justify-center text-[18px] text-yellow-500"></i>
+                    <span class="text-[15px] font-medium">Balanço / Créditos</span>
+                </div>
+                <i class="fas fa-chevron-down text-[12px] transform transition-transform" :class="expanded ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="expanded" x-collapse x-transition.opacity class="pl-13 pr-4 space-y-1 block mt-1 ml-4 border-l-2 border-gray-100 dark:border-gray-800 py-1">
+                <a href="{{ route('imei.history') }}" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded-[12px] hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center">
+                    <i class="fas fa-plus-circle text-[10px] mr-3"></i> Adicionar
+                </a>
+                <a href="{{ route('Server.history') }}" class="w-full text-left ml-2 px-4 py-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-[12px] hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center">
+                    <i class="fas fa-minus-circle text-[10px] mr-3"></i> Remover Saldo
+                </a>
+            </div>
+        </div>
+
+    </nav>
+
+    <!-- Rodapé Embutido -> Crédito + Perfil de Usuário -->
+    <div class="p-4 border-t border-gray-100 dark:border-gray-800/80 shrink-0 bg-white/50 dark:bg-black/10">
+        
+        <!-- Bloco de Créditos Destacado -->
+        <div class="bg-gray-50 dark:bg-[#2c2c2e] rounded-[20px] p-4 flex flex-col items-center justify-center space-y-1 mb-4 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group hover:border-apple-blue/30 transition-colors">
+            <!-- Icon Background decorativo -->
+            <i class="fas fa-coins absolute -right-4 -bottom-4 text-[60px] text-black/5 dark:text-white/5 transform group-hover:scale-110 transition-transform"></i>
+            
+            <span class="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold w-full text-left relative z-10">Total na Conta</span>
+            <div class="text-[28px] font-bold text-apple-dark dark:text-white tracking-tighter w-full text-left relative z-10 font-mono">
+                ${{ app('App\Http\Controllers\CreditController')->getTotalCredits() ?? '0.00' }}
+            </div>
+        </div>
+
+        <!-- Botão Menus do Usuário -->
+        <div x-data="{ profileOpen: false }" class="relative w-full">
+            <button @click="profileOpen = !profileOpen" class="w-full flex items-center justify-between px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-[16px] hover:bg-gray-100 dark:hover:bg-gray-800 transition focus:outline-none">
+                <div class="flex items-center">
+                    @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+                        <img class="h-10 w-10 rounded-full object-cover mr-3 shadow-sm border border-gray-200 dark:border-gray-700" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
+                    @else
+                        <div class="h-10 w-10 rounded-full bg-apple-blue/10 dark:bg-apple-blue/20 text-apple-blue border border-apple-blue/20 flex items-center justify-center mr-3 font-semibold text-lg shadow-sm">
+                            {{ substr(Auth::user()->name ?? 'A', 0, 1) }}
+                        </div>
+                    @endif
+                    <div class="flex flex-col items-start truncate max-w-[120px]">
+                        <span class="text-[14px] text-apple-dark dark:text-white font-semibold truncate w-full">{{ Auth::user()->name ?? 'Administrador' }}</span>
+                        <span class="text-[12px] text-gray-400 dark:text-gray-500 font-normal truncate w-full">{{ Auth::user()->email ?? 'admin@brserver' }}</span>
                     </div>
-                    @foreach (Auth::user()->allTeams() as $team)
-                        <x-switchable-team :team="$team" component="jet-responsive-nav-link" />
-                    @endforeach
-                    <div class="border-t border-gray-200"></div>
-                @endif
-                <x-responsive-nav-link href="{{ route('profile.show') }}" :active="request()->routeIs('profile.show')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
+                </div>
+                <i class="fas fa-chevron-up text-gray-400 text-[10px] transition-transform" :class="profileOpen ? 'rotate-180' : ''"></i>
+            </button>
+
+            <!-- Popup de Conta (Voa para cima do botão) -->
+            <div x-show="profileOpen" @click.away="profileOpen = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute bottom-full left-0 mb-3 w-full bg-white dark:bg-[#2c2c2e] border border-gray-100 dark:border-gray-700/80 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] py-2 z-50 overflow-hidden">
+                <div class="px-4 py-2 border-b border-gray-50 dark:border-gray-700/50 mb-1 pointer-events-none">
+                    <span class="block text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold">Conta</span>
+                </div>
+                
+                <a href="{{ route('profile.show') }}" class="flex items-center px-4 py-2.5 text-[14px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-apple-dark dark:hover:text-white transition">
+                    <i class="fas fa-user-circle w-5 mr-1 opacity-50"></i> Meu Perfil
+                </a>
                 @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                    <x-responsive-nav-link href="{{ route('api-tokens.index') }}" :active="request()->routeIs('api-tokens.index')">
-                        {{ __('API Tokens') }}
-                    </x-responsive-nav-link>
+                    <a href="{{ route('api-tokens.index') }}" class="flex items-center px-4 py-2.5 text-[14px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-apple-dark dark:hover:text-white transition">
+                        <i class="fas fa-key w-5 mr-1 opacity-50"></i> API Tokens
+                    </a>
                 @endif
-                <div class="border-t border-gray-200"></div>
-                <form method="POST" action="{{ route('logout') }}">
+                <div class="border-t border-gray-50 dark:border-gray-700/50 my-1"></div>
+                <!-- Sair / Logout -->
+                <form method="POST" action="{{ route('logout') }}" class="m-0 group">
                     @csrf
-                    <x-responsive-nav-link href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+                    <button type="submit" class="w-full flex items-center px-4 py-2.5 text-[14px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                        <i class="fas fa-sign-out-alt w-5 mr-1 group-hover:-translate-x-1 transition-transform"></i> Encerrar Sessão
+                    </button>
                 </form>
             </div>
         </div>
     </div>
-    @include('admin.modal.lucro')
-</nav>
+    
+    <!-- Modal do painel (lucros) encapsulado da rota e arquivos mortos -->
+    @includeIf('admin.modal.lucro')
 
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4); 
+            border-radius: 20px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.8); 
+        }
+    </style>
+</aside>

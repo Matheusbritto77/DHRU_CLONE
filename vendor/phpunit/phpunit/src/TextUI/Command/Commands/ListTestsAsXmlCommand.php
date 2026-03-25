@@ -9,26 +9,31 @@
  */
 namespace PHPUnit\TextUI\Command;
 
+use const PHP_EOL;
+use function assert;
 use function file_put_contents;
 use function ksort;
 use function sprintf;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Runner\PhptTestCase;
+use ReflectionClass;
 use XMLWriter;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final readonly class ListTestsAsXmlCommand implements Command
 {
     /**
-     * @psalm-var list<TestCase|PhptTestCase>
+     * @var list<PhptTestCase|TestCase>
      */
     private array $tests;
     private string $filename;
 
     /**
-     * @psalm-param list<TestCase|PhptTestCase> $tests
+     * @param list<PhptTestCase|TestCase> $tests
      */
     public function __construct(array $tests, string $filename)
     {
@@ -67,9 +72,13 @@ final readonly class ListTestsAsXmlCommand implements Command
                         $writer->endElement();
                     }
 
+                    $file = (new ReflectionClass($test))->getFileName();
+
+                    assert($file !== false);
+
                     $writer->startElement('testClass');
                     $writer->writeAttribute('name', $test::class);
-                    $writer->writeAttribute('file', $test->valueObjectForEvents()->file());
+                    $writer->writeAttribute('file', $file);
 
                     $currentTestClass = $test::class;
                 }
@@ -105,7 +114,7 @@ final readonly class ListTestsAsXmlCommand implements Command
 
         foreach ($groups as $groupName => $testIds) {
             $writer->startElement('group');
-            $writer->writeAttribute('name', $groupName);
+            $writer->writeAttribute('name', (string) $groupName);
 
             foreach ($testIds as $testId) {
                 $writer->startElement('test');

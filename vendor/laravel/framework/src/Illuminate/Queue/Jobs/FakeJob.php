@@ -2,9 +2,10 @@
 
 namespace Illuminate\Queue\Jobs;
 
+use Illuminate\Contracts\Queue\Job as JobContract;
 use Illuminate\Support\Str;
 
-class FakeJob extends Job
+class FakeJob extends Job implements JobContract
 {
     /**
      * The number of seconds the released job was delayed.
@@ -12,6 +13,13 @@ class FakeJob extends Job
      * @var int
      */
     public $releaseDelay;
+
+    /**
+     * The number of attempts made to process the job.
+     *
+     * @var int
+     */
+    public $attempts = 1;
 
     /**
      * The exception the job failed with.
@@ -50,6 +58,16 @@ class FakeJob extends Job
     {
         $this->released = true;
         $this->releaseDelay = $delay;
+    }
+
+    /**
+     * Get the number of times the job has been attempted.
+     *
+     * @return int
+     */
+    public function attempts()
+    {
+        return $this->attempts;
     }
 
     /**
