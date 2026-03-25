@@ -29,7 +29,7 @@ class RegistrationSettings
             'location_mode' => 'hidden',
             'email_verification_mode' => 'required',
             'phone_field_mode' => 'hidden',
-            'currency_field_mode' => 'hidden',
+            'currency_field_mode' => 'required',
             'currency_base' => 'USD',
             'currency_options' => ['USD', 'EUR', 'BRL'],
             'real_email_validation' => false,
@@ -59,6 +59,9 @@ class RegistrationSettings
         if ($currencyOptions !== []) {
             $settings['currency_options'] = array_keys($currencyOptions);
         }
+
+        // A moeda preferida faz parte obrigatoria do cadastro e nao deve ser desativada no plugin.
+        $settings['currency_field_mode'] = 'required';
 
         return $settings;
     }

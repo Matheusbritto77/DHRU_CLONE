@@ -19,8 +19,8 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
             'description' => 'Formulario principal para iniciar recarga via gateways de pagamento.',
             'default_settings' => [
                 'title' => 'Recarga da conta',
-                'usd_label' => 'Valor em USD',
-                'total_label' => 'Total estimado',
+                'usd_label' => 'Créditos em USD',
+                'total_label' => 'Total estimado na sua moeda',
                 'payment_label' => 'Metodo de pagamento',
                 'submit_text' => 'Ir para pagamento',
                 'service_fee_rate' => '0.00',
@@ -80,7 +80,7 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
                 <div class="mt-6 space-y-4">
                     <div class="rounded-[24px] p-5 theme-soft">
                         <p class="text-sm font-semibold theme-text">Conversao usada</p>
-                        <p id="credit-conversion-hint" class="mt-2 text-sm leading-7 theme-muted">O gateway pode converter automaticamente de {{ $userCurrency }} para a moeda de cobranca.</p>
+                        <p id="credit-conversion-hint" class="mt-2 text-sm leading-7 theme-muted">O total sera calculado dinamicamente na moeda do usuario e na moeda de cobranca do gateway.</p>
                     </div>
                     <div class="rounded-[24px] p-5 theme-soft">
                         <p class="text-sm font-semibold theme-text">Taxa operacional</p>

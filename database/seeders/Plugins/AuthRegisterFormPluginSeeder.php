@@ -39,7 +39,7 @@ class AuthRegisterFormPluginSeeder extends AbstractPluginSeeder
                 'location_mode' => 'hidden',
                 'email_verification_mode' => 'required',
                 'phone_field_mode' => 'hidden',
-                'currency_field_mode' => 'hidden',
+                'currency_field_mode' => 'required',
                 'currency_base' => 'USD',
                 'currency_options' => ['USD', 'EUR', 'BRL'],
                 'real_email_validation' => false,

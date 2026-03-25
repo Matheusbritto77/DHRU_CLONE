@@ -57,8 +57,9 @@ class ManageRegisterSettings extends Component implements HasForms
                                         ->options(['hidden' => 'Oculto', 'optional' => 'Opcional', 'required' => 'Obrigatório']),
                                     Forms\Components\Select::make('phone_field_mode')
                                         ->options(['hidden' => 'Oculto', 'optional' => 'Opcional', 'required' => 'Obrigatório']),
-                                    Forms\Components\Select::make('currency_field_mode')
-                                        ->options(['hidden' => 'Oculto', 'optional' => 'Opcional', 'required' => 'Obrigatório']),
+                                    Forms\Components\Placeholder::make('currency_field_mode_locked')
+                                        ->label('Moeda preferida')
+                                        ->content('Obrigatório no cadastro'),
                                 ]),
                                 Forms\Components\Toggle::make('real_email_validation')->label('Validar Email Real'),
                                 Forms\Components\Toggle::make('accept_terms_required')->label('Obrigar aceitar termos'),
