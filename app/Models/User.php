@@ -11,6 +11,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use App\Support\RegistrationSettings;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -22,6 +23,7 @@ class User extends Authenticatable implements FilamentUser
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use SoftDeletes;
     
 
     /**
@@ -40,6 +42,7 @@ class User extends Authenticatable implements FilamentUser
         'registration_meta',
         'password',
         'id_admin',
+        'is_active',
     ];
 
     /**
