@@ -36,6 +36,26 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-admin', function (User $user) {
             return (bool) $user->id_admin;
         });
+
+        Gate::define('viewHorizon', function (?User $user = null) {
+            return $user?->can('view-admin') ?? false;
+        });
+
+        Gate::define('view-pulse', function (User $user) {
+            return $user->can('view-admin');
+        });
+
+        Gate::define('viewLogViewer', function (?User $user = null) {
+            return $user?->can('view-admin') ?? false;
+        });
+
+        // Auto-start Bun Manager in local development
+        if (app()->environment('local') && !app()->runningInConsole()) {
+            $managerPath = base_path('manager.ts');
+            if (file_exists($managerPath)) {
+                @shell_exec("nohup bun run {$managerPath} > /dev/null 2>&1 &");
+            }
+        }
     }
 
     protected function registerPluginLivewireComponents(): void
