@@ -12,13 +12,11 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -40,10 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->navigationItems(array_merge(
-                $this->getPluginNavigationItems(),
-                $this->getSupportNavigationItems()
-            ))
+            ->navigationItems($this->getPluginNavigationItems())
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
@@ -87,30 +82,4 @@ class AdminPanelProvider extends PanelProvider
             ->all();
     }
 
-    /**
-     * @return array<int, NavigationItem>
-     */
-    protected function getSupportNavigationItems(): array
-    {
-        $items = [
-            NavigationItem::make('Pulse')
-                ->group('Suporte')
-                ->icon('heroicon-o-chart-bar-square')
-                ->url('/admin/pulse', shouldOpenInNewTab: true),
-
-            NavigationItem::make('Logs')
-                ->group('Suporte')
-                ->icon('heroicon-o-document-text')
-                ->url('/admin/log-viewer', shouldOpenInNewTab: true),
-        ];
-
-        if (Config::get('queue.default') === 'redis') {
-            $items[] = NavigationItem::make('Horizon')
-                ->group('Suporte')
-                ->icon('heroicon-o-queue-list')
-                ->url('/admin/horizon', shouldOpenInNewTab: true);
-        }
-
-        return $items;
-    }
 }
