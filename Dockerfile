@@ -21,6 +21,7 @@ RUN apk update && apk upgrade && \
     apk add --no-cache \
     nginx \
     supervisor \
+    $PHPIZE_DEPS \
     libpng-dev \
     libzip-dev \
     libxml2-dev \
@@ -45,7 +46,9 @@ RUN apk update && apk upgrade && \
     make
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql bcmath gd zip intl xml opcache pcntl posix
+    && docker-php-ext-install pdo_mysql bcmath gd zip intl xml opcache pcntl posix \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -64,7 +67,9 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
     DB_CONNECTION=sqlite \
     DB_DATABASE=:memory:
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
-    && php artisan package:discover --ansi
+    && php artisan package:discover --ansi \
+    && php artisan filament:assets --ansi \
+    && php artisan livewire:publish --assets --force --ansi
 
 # Copy Nginx configuration
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
