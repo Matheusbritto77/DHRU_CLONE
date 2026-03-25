@@ -63,7 +63,7 @@ class UserResource extends Resource
                                     ->label('Administrador')
                                     ->onIcon('heroicon-m-shield-check')
                                     ->offIcon('heroicon-m-user')
-                                    ->color('danger'),
+                                    ->onColor('danger'),
                                 
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Usuário Ativo')
