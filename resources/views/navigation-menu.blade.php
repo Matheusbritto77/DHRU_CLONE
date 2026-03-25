@@ -159,6 +159,11 @@
             <div class="block px-4 py-2 text-xs text-gray-400">
                 {{ __('Manage Account') }}
             </div>
+            @if(Auth::user()->isAdmin())
+                <x-dropdown-link href="/admin" class="text-white hover:text-gray-900 focus:text-gray-900 font-bold border-b border-gray-700">
+                    {{ __('Painel Admin') }}
+                </x-dropdown-link>
+            @endif
             <x-dropdown-link href="{{ route('profile.show') }}" class="text-white hover:text-gray-900 focus:text-gray-900">
                 {{ __('Profile') }}
             </x-dropdown-link>
@@ -256,6 +261,11 @@
                             <x-switchable-team :team="$team" class="text-gray-300 hover:text-white" />
                         @endforeach
                     @endif
+                @endif
+                @if(Auth::user()->isAdmin())
+                    <x-responsive-nav-link href="/admin" class="text-gray-300 hover:text-white font-bold">
+                        {{ __('Painel Admin') }}
+                    </x-responsive-nav-link>
                 @endif
                 <x-responsive-nav-link href="{{ route('profile.show') }}" :active="request()->routeIs('profile.show')" class="text-gray-300 hover:text-white">
                     {{ __('Profile') }}

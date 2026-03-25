@@ -12,7 +12,10 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use App\Support\RegistrationSettings;
 
-class User extends Authenticatable
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
     use HasFactory;
@@ -36,6 +39,7 @@ class User extends Authenticatable
         'preferred_currency',
         'registration_meta',
         'password',
+        'id_admin',
     ];
 
     /**
@@ -89,5 +93,15 @@ class User extends Authenticatable
         }
 
         $this->notify(new CustomVerifyEmail());
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return (bool) $this->id_admin;
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->id_admin;
     }
 }
