@@ -24,29 +24,25 @@
                 <h3 class="text-lg font-semibold">Arquivos</h3>
                 <div class="mt-4 space-y-3">
                     @foreach ($files as $file)
-                        <div class="rounded-xl border p-3">
+                        <button
+                            type="button"
+                            wire:click="$set('selectedFile', '{{ $file['path'] }}'); refreshData()"
+                            class="block w-full rounded-xl border p-3 text-left transition hover:border-primary-400"
+                        >
                             <div class="font-medium">{{ $file['name'] }}</div>
                             <div class="mt-1 text-xs text-gray-500">{{ $file['size_kb'] }} KB · {{ $file['updated_at'] }}</div>
-                        </div>
+                        </button>
                     @endforeach
                 </div>
             </div>
 
             <div class="rounded-2xl border bg-white p-5 shadow-sm dark:bg-gray-900 xl:col-span-2">
-                <h3 class="text-lg font-semibold">Tail recente</h3>
-                <div class="mt-4 space-y-2">
-                    @forelse ($entries as $entry)
-                        <div @class([
-                            'rounded-xl border p-3 font-mono text-xs break-all',
-                            'border-danger-200 bg-danger-50 dark:border-danger-900/30 dark:bg-danger-950/20' => in_array($entry['level'], ['error', 'critical', 'alert', 'emergency'], true),
-                            'border-warning-200 bg-warning-50 dark:border-warning-900/30 dark:bg-warning-950/20' => $entry['level'] === 'warning',
-                            'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800' => ! in_array($entry['level'], ['error', 'critical', 'alert', 'emergency', 'warning'], true),
-                        ])>
-                            {{ $entry['message'] }}
-                        </div>
-                    @empty
-                        <div class="text-sm text-gray-500">Nenhuma linha encontrada.</div>
-                    @endforelse
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Tail recente</h3>
+                    <div class="text-xs text-gray-500">{{ basename($selectedFile ?: '-') }}</div>
+                </div>
+                <div class="mt-4">
+                    {{ $this->table }}
                 </div>
             </div>
         </div>

@@ -3,7 +3,10 @@
 namespace App\Filament\Pages;
 
 use Exception;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Collection;
 use Laravel\Horizon\Contracts\JobRepository;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
@@ -39,6 +42,33 @@ class HorizonDashboard extends Page
     public function mount(): void
     {
         $this->refreshData();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('refresh')
+                ->label('Atualizar')
+                ->icon('heroicon-o-arrow-path')
+                ->action(fn () => $this->refreshData()),
+            Action::make('pause')
+                ->label('Pausar')
+                ->icon('heroicon-o-pause')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->action(fn () => $this->runHorizonCommand('horizon:pause')),
+            Action::make('continue')
+                ->label('Continuar')
+                ->icon('heroicon-o-play')
+                ->color('success')
+                ->action(fn () => $this->runHorizonCommand('horizon:continue')),
+            Action::make('terminate')
+                ->label('Reiniciar')
+                ->icon('heroicon-o-stop')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->action(fn () => $this->runHorizonCommand('horizon:terminate')),
+        ];
     }
 
     public function refreshData(): void
@@ -98,5 +128,25 @@ class HorizonDashboard extends Page
             ])
             ->values()
             ->all();
+    }
+
+    protected function runHorizonCommand(string $command): void
+    {
+        try {
+            Artisan::call($command);
+
+            Notification::make()
+                ->title('Comando executado com sucesso')
+                ->success()
+                ->send();
+
+            $this->refreshData();
+        } catch (Exception $exception) {
+            Notification::make()
+                ->title('Erro ao executar comando do Horizon')
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }
