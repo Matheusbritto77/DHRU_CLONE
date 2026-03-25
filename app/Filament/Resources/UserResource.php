@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\RegistrationSettings;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,6 +24,9 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $registrationSettings = RegistrationSettings::get();
+        $customFields = RegistrationSettings::getCustomFields();
+
         return $form
             ->schema([
                 Forms\Components\Section::make('Informações de Perfil')
@@ -45,8 +49,32 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('phone')
                             ->label('Telefone')
-                            ->tel(),
+                            ->tel()
+                            ->visible(fn (): bool => ($registrationSettings['phone_field_mode'] ?? 'hidden') !== 'hidden')
+                            ->required(fn (): bool => ($registrationSettings['phone_field_mode'] ?? 'hidden') === 'required'),
+                        Forms\Components\Select::make('preferred_currency')
+                            ->label($registrationSettings['currency_label'] ?? 'Moeda preferida')
+                            ->options(RegistrationSettings::getCurrencyOptions())
+                            ->searchable()
+                            ->visible(fn (): bool => ($registrationSettings['currency_field_mode'] ?? 'hidden') !== 'hidden')
+                            ->required(fn (): bool => ($registrationSettings['currency_field_mode'] ?? 'hidden') === 'required'),
+                        Forms\Components\Select::make('country_code')
+                            ->label('País')
+                            ->options(RegistrationSettings::getCountryOptions())
+                            ->searchable()
+                            ->visible(fn (): bool => ($registrationSettings['location_mode'] ?? 'hidden') !== 'hidden'),
+                        Forms\Components\TextInput::make('state_region')
+                            ->label('Estado / Região')
+                            ->visible(fn (): bool => ($registrationSettings['location_mode'] ?? 'hidden') !== 'hidden'),
+                        Forms\Components\TextInput::make('city')
+                            ->label('Cidade')
+                            ->visible(fn (): bool => ($registrationSettings['location_mode'] ?? 'hidden') !== 'hidden'),
                     ])->columns(2),
+
+                Forms\Components\Section::make('Campos do Cadastro')
+                    ->schema(static::buildRegistrationMetaFields($customFields))
+                    ->visible(fn (): bool => $customFields !== [])
+                    ->columns(2),
 
                 Forms\Components\Section::make('Segurança e Status')
                     ->schema([
@@ -88,6 +116,33 @@ class UserResource extends Resource
                             ->default(0.00),
                     ]),
             ]);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $customFields
+     * @return array<int, Forms\Components\Component>
+     */
+    protected static function buildRegistrationMetaFields(array $customFields): array
+    {
+        return collect($customFields)
+            ->map(function (array $field) {
+                $statePath = 'registration_meta.' . $field['name'];
+                $label = $field['label'];
+                $required = (bool) ($field['required'] ?? false);
+                $placeholder = $field['placeholder'] ?? $label;
+
+                $component = match ($field['type']) {
+                    'textarea' => Forms\Components\Textarea::make($statePath),
+                    'select' => Forms\Components\Select::make($statePath)->options(array_combine($field['options'], $field['options'])),
+                    default => Forms\Components\TextInput::make($statePath)->type(in_array($field['type'], ['email', 'url'], true) ? $field['type'] : 'text'),
+                };
+
+                return $component
+                    ->label($label)
+                    ->placeholder($placeholder)
+                    ->required($required);
+            })
+            ->all();
     }
 
     public static function table(Table $table): Table
