@@ -43,7 +43,11 @@ COPY --chown=$USER:$GROUP . .
 COPY --from=assets --chown=$USER:$GROUP /app/public/build ./public/build
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    DB_CONNECTION=sqlite \
+    DB_DATABASE=:memory:
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
+    && php artisan package:discover --ansi
 
 # Copy Nginx configuration
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
