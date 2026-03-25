@@ -29,13 +29,30 @@ RUN apk update && apk upgrade && \
     postgresql-dev \
     freetype-dev \
     libjpeg-turbo-dev \
-    linux-headers
+    linux-headers \
+    curl \
+    bash \
+    unzip \
+    ca-certificates \
+    libstdc++ \
+    libgcc \
+    libcrypto3 \
+    libssl3 \
+    gnutls-utils \
+    musl-dev \
+    gcc \
+    g++ \
+    make
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql bcmath gd zip intl xml opcache
+    && docker-php-ext-install pdo_mysql bcmath gd zip intl xml opcache pcntl posix
 
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash \
+    && ln -s /root/.bun/bin/bun /usr/local/bin/bun
 
 # Copy App code
 COPY --chown=$USER:$GROUP . .
