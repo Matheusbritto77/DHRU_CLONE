@@ -35,7 +35,7 @@ class GerencianetPixGateway extends AbstractPaymentGateway
                 'expiracao' => (int) ($settings['pix_expiration_seconds'] ?? 3600),
             ],
             'valor' => [
-                'original' => number_format((float) $payload['total_brl'], 2, '.', ''),
+                'original' => number_format((float) ($payload['total_gateway'] ?? $payload['total_brl']), 2, '.', ''),
             ],
             'chave' => $settings['pix_key'],
             'solicitacaoPagador' => (string) ($settings['payment_request_message'] ?? 'Pagamento Plataforma'),

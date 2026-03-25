@@ -44,6 +44,12 @@ class PaymentGatewayManager
                     'label' => ($settings['checkout_label'] ?? null) ?: (($settings['display_name'] ?? null) ?: $plugin->name),
                     'display_name' => ($settings['display_name'] ?? null) ?: $plugin->name,
                     'enabled' => $driver->isEnabled(),
+                    'checkout_currency' => strtoupper((string) ($settings['checkout_currency'] ?? 'USD')),
+                    'gateway_fee_rate' => (float) ($settings['gateway_fee_rate'] ?? 0),
+                    'gateway_fixed_fee' => (float) ($settings['gateway_fixed_fee'] ?? 0),
+                    'manual_checkout' => (bool) ($settings['manual_checkout'] ?? false),
+                    'manual_checkout_url' => (string) ($settings['manual_checkout_url'] ?? ''),
+                    'manual_checkout_message' => (string) ($settings['manual_checkout_message'] ?? ''),
                 ];
             })
             ->filter(fn (array $gateway) => $gateway['enabled'])

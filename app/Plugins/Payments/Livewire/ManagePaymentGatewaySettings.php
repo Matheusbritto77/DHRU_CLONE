@@ -37,6 +37,11 @@ class ManagePaymentGatewaySettings extends Component implements HasForms
                                 Forms\Components\TextInput::make('display_name')->label('Nome exibido'),
                                 Forms\Components\TextInput::make('checkout_label')->label('Label no checkout'),
                                 Forms\Components\TextInput::make('checkout_currency')->label('Moeda do checkout')->default('BRL'),
+                                Forms\Components\Toggle::make('manual_checkout')->label('Checkout manual'),
+                                Forms\Components\TextInput::make('manual_checkout_url')->label('URL manual'),
+                                Forms\Components\Textarea::make('manual_checkout_message')->label('Mensagem manual'),
+                                Forms\Components\TextInput::make('gateway_fee_rate')->numeric()->label('Taxa percentual do gateway'),
+                                Forms\Components\TextInput::make('gateway_fixed_fee')->numeric()->label('Taxa fixa do gateway'),
                             ]),
                         Forms\Components\Tabs\Tab::make('Credenciais')
                             ->schema($this->credentialFields()),

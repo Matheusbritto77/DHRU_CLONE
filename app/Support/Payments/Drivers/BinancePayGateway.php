@@ -39,8 +39,8 @@ class BinancePayGateway extends AbstractPaymentGateway
         $orderData = [
             'env' => ['terminalType' => 'APP'],
             'merchantTradeNo' => (string) Str::uuid(),
-            'orderAmount' => (float) $payload['amount_usd_hidden'],
-            'currency' => (string) ($settings['currency'] ?? 'USDT'),
+            'orderAmount' => (float) ($payload['total_gateway'] ?? $payload['amount_usd_hidden']),
+            'currency' => (string) ($payload['gateway_currency'] ?? $settings['currency'] ?? 'USDT'),
             'description' => (string) ($settings['description'] ?? 'Recarga de creditos'),
             'returnUrl' => (string) ($settings['return_url'] ?? url('/add-credits')),
             'webhookUrl' => route('payments.events.webhook', ['gateway' => $this->pluginSlug()]),

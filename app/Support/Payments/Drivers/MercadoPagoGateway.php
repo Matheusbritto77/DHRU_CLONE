@@ -46,8 +46,8 @@ class MercadoPagoGateway extends AbstractPaymentGateway
                     'id' => $reference,
                     'title' => 'Recarga de creditos',
                     'quantity' => 1,
-                    'currency_id' => strtoupper($currency),
-                    'unit_price' => (float) $payload['total_brl'],
+                    'currency_id' => strtoupper((string) ($payload['gateway_currency'] ?? $currency)),
+                    'unit_price' => (float) ($payload['total_gateway'] ?? $payload['total_brl']),
                 ]],
                 'back_urls' => [
                     'success' => (string) ($settings['success_url'] ?? url('/add-credits')),

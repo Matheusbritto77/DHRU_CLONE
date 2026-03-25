@@ -38,7 +38,7 @@ class StripeGateway extends AbstractPaymentGateway
         }
 
         $reference = (string) Str::uuid();
-        $currency = strtolower((string) ($settings['checkout_currency'] ?? 'brl'));
+        $currency = strtolower((string) ($payload['gateway_currency'] ?? $settings['checkout_currency'] ?? 'brl'));
 
         $response = Http::asForm()
             ->withBasicAuth($secretKey, '')
@@ -51,7 +51,7 @@ class StripeGateway extends AbstractPaymentGateway
                 'metadata[reference]' => $reference,
                 'line_items[0][quantity]' => 1,
                 'line_items[0][price_data][currency]' => $currency,
-                'line_items[0][price_data][unit_amount]' => (int) round(((float) $payload['total_brl']) * 100),
+                'line_items[0][price_data][unit_amount]' => (int) round(((float) ($payload['total_gateway'] ?? $payload['total_brl'])) * 100),
                 'line_items[0][price_data][product_data][name]' => 'Recarga de creditos',
             ]);
 
