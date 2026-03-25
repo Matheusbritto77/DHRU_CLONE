@@ -51,6 +51,9 @@ class ManagePaymentGatewaySettings extends Component implements HasForms
                                 Forms\Components\Placeholder::make('reconcile_webhook_url')
                                     ->label('Webhook de reconciliacao')
                                     ->content(fn (): string => route('payments.reconcile.webhook', ['gateway' => $this->plugin->slug])),
+                                Forms\Components\Placeholder::make('events_webhook_url')
+                                    ->label('Webhook de eventos')
+                                    ->content(fn (): string => route('payments.events.webhook', ['gateway' => $this->plugin->slug])),
                             ]),
                         Forms\Components\Tabs\Tab::make('Runtime')
                             ->schema([

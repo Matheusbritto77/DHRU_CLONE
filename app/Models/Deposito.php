@@ -26,15 +26,22 @@ class Deposito extends Model
         'txid',
         'gateway_slug',
         'gateway_reference',
+        'webhook_token',
         'gateway_payload',
+        'webhook_last_payload',
         'valor',
         'user_id',
         'status',
+        'payment_status_detail',
         'paid_at',
+        'credited_at',
+        'credited_amount',
     ];
 
     protected $casts = [
         'gateway_payload' => 'array',
+        'webhook_last_payload' => 'array',
         'paid_at' => 'datetime',
+        'credited_at' => 'datetime',
     ];
 }

@@ -5,10 +5,10 @@ namespace App\Support\Payments\Drivers;
 use App\Models\Deposito;
 use App\Models\User;
 use App\Support\Payments\AbstractPaymentGateway;
-use Exception;
+use App\Support\Payments\PaymentWebhookResult;
 use Gerencianet\Exception\GerencianetException;
 use Gerencianet\Gerencianet;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use RuntimeException;
 
 class GerencianetPixGateway extends AbstractPaymentGateway
@@ -52,10 +52,12 @@ class GerencianetPixGateway extends AbstractPaymentGateway
             'txid' => $pix['txid'],
             'gateway_slug' => $this->pluginSlug(),
             'gateway_reference' => (string) ($pix['loc']['id'] ?? $pix['txid']),
+            'webhook_token' => $this->generateWebhookToken(),
             'gateway_payload' => $pix,
             'valor' => (float) $payload['amount_usd_hidden'],
             'user_id' => $user->id,
             'status' => 0,
+            'payment_status_detail' => 'pending',
         ]);
 
         $qrCode = $api->pixGenerateQRCode([
@@ -102,23 +104,47 @@ class GerencianetPixGateway extends AbstractPaymentGateway
                 continue;
             }
 
-            DB::transaction(function () use ($deposit, &$updated): void {
-                $deposit->status = 1;
-                $deposit->paid_at = now();
-                $deposit->save();
-
-                $user = User::query()->find($deposit->user_id);
-
-                if ($user) {
-                    $user->credit += $deposit->valor;
-                    $user->save();
-                }
-
-                $updated++;
-            });
+            $this->confirmDeposit($deposit, (array) $receivedByTxid->get($deposit->txid), 'paid');
+            $updated++;
         }
 
         return ['checked' => $deposits->count(), 'updated' => $updated];
+    }
+
+    public function validateWebhook(Request $request): bool
+    {
+        $secret = (string) ($this->settings()['reconcile_webhook_secret'] ?? '');
+        $provided = $request->header('X-Gateway-Webhook-Secret', $request->string('secret')->toString());
+
+        return $secret !== '' && hash_equals($secret, $provided);
+    }
+
+    public function handleWebhook(Request $request): PaymentWebhookResult
+    {
+        $payload = $request->all();
+        $txid = (string) data_get($payload, 'pix.0.txid', data_get($payload, 'txid', ''));
+
+        return new PaymentWebhookResult(
+            eventId: (string) data_get($payload, 'id', $txid ?: $this->generateWebhookToken()),
+            eventType: (string) data_get($payload, 'evento', 'pix.received'),
+            status: 'paid',
+            payload: $payload,
+            depositReference: $txid !== '' ? $txid : null,
+        );
+    }
+
+    public function findDepositFromWebhook(array $payload): ?Deposito
+    {
+        $txid = (string) data_get($payload, 'pix.0.txid', data_get($payload, 'txid', ''));
+
+        if ($txid === '') {
+            return null;
+        }
+
+        return Deposito::query()
+            ->where('gateway_slug', $this->pluginSlug())
+            ->where('txid', $txid)
+            ->first();
     }
 
     /**

@@ -91,6 +91,9 @@ Route::post('/payments/{gateway}/checkout', [PaymentGatewayController::class, 'c
 Route::post('/webhooks/payments/{gateway}/reconcile', [PaymentGatewayWebhookController::class, 'reconcile'])
     ->name('payments.reconcile.webhook');
 
+Route::post('/webhooks/payments/{gateway}/events', [PaymentGatewayWebhookController::class, 'events'])
+    ->name('payments.events.webhook');
+
 Route::post('/processar-pagamento', [PaymentGatewayController::class, 'checkout'])
     ->middleware(['auth', 'verified'])
     ->defaults('gateway', 'payment-binance-pay')
