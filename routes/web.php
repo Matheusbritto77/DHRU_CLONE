@@ -60,7 +60,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'can:view-admin'])->group(function () {
     // Rota delegada para o painel Filament v3
     // Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     

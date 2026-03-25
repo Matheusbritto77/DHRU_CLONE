@@ -7,7 +7,9 @@ use App\Domain\Dhru\Contracts\DhruProviderClientInterface;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPluginLivewireComponents();
+
+        Gate::define('view-admin', function (User $user) {
+            return (bool) $user->id_admin;
+        });
     }
 
     protected function registerPluginLivewireComponents(): void
