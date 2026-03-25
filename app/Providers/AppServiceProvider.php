@@ -41,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
             return $user?->can('view-admin') ?? false;
         });
 
+        Gate::define('viewPulse', function (?User $user = null) {
+            return $user?->can('view-admin') ?? false;
+        });
+
         Gate::define('view-pulse', function (User $user) {
             return $user->can('view-admin');
         });

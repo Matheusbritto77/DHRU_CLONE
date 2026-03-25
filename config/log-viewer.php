@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'route_path' => 'log-viewer',
+    'route_path' => 'admin/log-viewer',
 
     /*
     |--------------------------------------------------------------------------
@@ -104,6 +104,8 @@ return [
 
     'middleware' => [
         'web',
+        'auth',
+        'can:view-admin',
         AuthorizeLogViewer::class,
     ],
 
@@ -118,6 +120,8 @@ return [
 
     'api_middleware' => [
         EnsureFrontendRequestsAreStateful::class,
+        'auth',
+        'can:view-admin',
         AuthorizeLogViewer::class,
     ],
 

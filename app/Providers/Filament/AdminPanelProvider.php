@@ -95,17 +95,17 @@ class AdminPanelProvider extends PanelProvider
             NavigationItem::make('Pulse')
                 ->group('Suporte')
                 ->icon('heroicon-o-chart-bar-square')
-                ->url('/pulse', shouldOpenInNewTab: true),
+                ->url('/admin/pulse', shouldOpenInNewTab: true),
             
             NavigationItem::make('Horizon')
                 ->group('Suporte')
                 ->icon('heroicon-o-queue-list')
-                ->url('/horizon', shouldOpenInNewTab: true),
+                ->url('/admin/horizon', shouldOpenInNewTab: true),
             
             NavigationItem::make('Logs')
                 ->group('Suporte')
                 ->icon('heroicon-o-document-text')
-                ->url('/log-viewer', shouldOpenInNewTab: true),
+                ->url('/admin/log-viewer', shouldOpenInNewTab: true),
         ];
     }
 }
