@@ -11,11 +11,14 @@
         "guzzlehttp/guzzle": "^7.8",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12",
+        "laravel/horizon": "^5.45",
         "laravel/jetstream": "^5.1",
+        "laravel/pulse": "^1.7",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.5",
         "livewire/livewire": "^3.0",
+        "opcodesio/log-viewer": "^3.24",
         "propaganistas/laravel-phone": "^6.0"
     },
     "require-dev": {

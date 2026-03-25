@@ -39,7 +39,10 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->navigationItems($this->getPluginNavigationItems())
+            ->navigationItems(array_merge(
+                $this->getPluginNavigationItems(),
+                $this->getSupportNavigationItems()
+            ))
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
@@ -81,5 +84,28 @@ class AdminPanelProvider extends PanelProvider
                 ->url(fn (): string => PluginResource::getUrl('manageAdmin', ['record' => $plugin]))
             )
             ->all();
+    }
+
+    /**
+     * @return array<int, NavigationItem>
+     */
+    protected function getSupportNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Pulse')
+                ->group('Suporte')
+                ->icon('heroicon-o-chart-bar-square')
+                ->url('/pulse', shouldOpenInNewTab: true),
+            
+            NavigationItem::make('Horizon')
+                ->group('Suporte')
+                ->icon('heroicon-o-queue-list')
+                ->url('/horizon', shouldOpenInNewTab: true),
+            
+            NavigationItem::make('Logs')
+                ->group('Suporte')
+                ->icon('heroicon-o-document-text')
+                ->url('/log-viewer', shouldOpenInNewTab: true),
+        ];
     }
 }
