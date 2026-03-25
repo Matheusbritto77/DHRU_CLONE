@@ -96,6 +96,7 @@ class ManagePaymentGatewaySettings extends Component implements HasForms
                 Forms\Components\TextInput::make('access_token')->label('Access token'),
                 Forms\Components\TextInput::make('public_key')->label('Public key'),
                 Forms\Components\Select::make('mode')->options(['production' => 'production', 'sandbox' => 'sandbox']),
+                Forms\Components\TextInput::make('webhook_secret')->password()->revealable()->label('Webhook secret'),
                 Forms\Components\TextInput::make('success_url')->label('URL de sucesso'),
                 Forms\Components\TextInput::make('failure_url')->label('URL de falha'),
                 Forms\Components\TextInput::make('pending_url')->label('URL pendente'),

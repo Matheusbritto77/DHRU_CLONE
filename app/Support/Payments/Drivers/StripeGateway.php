@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
+use UnexpectedValueException;
 
 class StripeGateway extends AbstractPaymentGateway
 {
@@ -85,20 +88,13 @@ class StripeGateway extends AbstractPaymentGateway
             return false;
         }
 
-        preg_match('/t=([^,]+)/', $signature, $timestampMatch);
-        preg_match('/v1=([^,]+)/', $signature, $hashMatch);
+        try {
+            Webhook::constructEvent($request->getContent(), $signature, $secret);
 
-        $timestamp = $timestampMatch[1] ?? null;
-        $hash = $hashMatch[1] ?? null;
-
-        if (! $timestamp || ! $hash) {
+            return true;
+        } catch (UnexpectedValueException|SignatureVerificationException) {
             return false;
         }
-
-        $signedPayload = $timestamp . '.' . $request->getContent();
-        $expected = hash_hmac('sha256', $signedPayload, $secret);
-
-        return hash_equals($expected, $hash);
     }
 
     public function handleWebhook(Request $request): PaymentWebhookResult

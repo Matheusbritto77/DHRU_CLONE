@@ -37,6 +37,7 @@ class MercadoPagoGatewayPluginSeeder extends AbstractPluginSeeder
                 'mode' => 'production',
                 'access_token' => '',
                 'public_key' => '',
+                'webhook_secret' => '',
                 'success_url' => '',
                 'failure_url' => '',
                 'pending_url' => '',

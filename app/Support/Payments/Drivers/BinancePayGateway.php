@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\Payments\AbstractPaymentGateway;
 use App\Support\Payments\PaymentWebhookResult;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -84,9 +85,25 @@ class BinancePayGateway extends AbstractPaymentGateway
         $signature = (string) $request->header('BinancePay-Signature');
         $timestamp = (string) $request->header('BinancePay-Timestamp');
         $nonce = (string) $request->header('BinancePay-Nonce');
+        $certificateSn = (string) $request->header('BinancePay-Certificate-SN');
+        $apiKey = (string) ($this->settings()['api_key'] ?? '');
         $secret = (string) ($this->settings()['api_secret'] ?? '');
 
-        if ($signature === '' || $timestamp === '' || $nonce === '' || $secret === '') {
+        if ($signature === '' || $timestamp === '' || $nonce === '' || $certificateSn === '' || $apiKey === '' || $secret === '') {
+            return false;
+        }
+
+        if (! hash_equals($apiKey, $certificateSn)) {
+            return false;
+        }
+
+        try {
+            $age = abs(Carbon::createFromTimestampMs((int) $timestamp)->diffInSeconds(now()));
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if ($age > 300) {
             return false;
         }
 

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\Payments\AbstractPaymentGateway;
 use App\Support\Payments\PaymentWebhookResult;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -82,7 +83,52 @@ class MercadoPagoGateway extends AbstractPaymentGateway
 
     public function validateWebhook(Request $request): bool
     {
-        return filled($this->settings()['access_token'] ?? null);
+        $secret = (string) ($this->settings()['webhook_secret'] ?? '');
+        $signatureHeader = (string) $request->header('x-signature');
+        $requestId = (string) $request->header('x-request-id');
+
+        if ($secret === '' || $signatureHeader === '' || $requestId === '') {
+            return false;
+        }
+
+        $signatureParts = collect(explode(',', $signatureHeader))
+            ->map(fn (string $part): array => array_pad(explode('=', trim($part), 2), 2, null))
+            ->filter(fn (array $pair): bool => filled($pair[0]) && filled($pair[1]))
+            ->mapWithKeys(fn (array $pair): array => [trim((string) $pair[0]) => trim((string) $pair[1])]);
+
+        $timestamp = $signatureParts->get('ts');
+        $hash = $signatureParts->get('v1');
+
+        if (! $timestamp || ! $hash) {
+            return false;
+        }
+
+        try {
+            $age = abs(Carbon::createFromTimestamp((int) $timestamp)->diffInSeconds(now()));
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if ($age > 300) {
+            return false;
+        }
+
+        $dataId = (string) data_get($request->all(), 'data.id', $request->query('data.id', ''));
+
+        if ($dataId === '') {
+            return false;
+        }
+
+        $manifest = sprintf(
+            'id:%s;request-id:%s;ts:%s;',
+            strtolower($dataId),
+            $requestId,
+            $timestamp,
+        );
+
+        $expected = hash_hmac('sha256', $manifest, $secret);
+
+        return hash_equals($expected, $hash);
     }
 
     public function handleWebhook(Request $request): PaymentWebhookResult
