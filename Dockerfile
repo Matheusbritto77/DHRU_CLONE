@@ -69,7 +69,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
     && php artisan package:discover --ansi \
     && php artisan filament:assets --ansi \
-    && php artisan livewire:publish --assets --force --ansi
+    && php artisan livewire:publish --assets --ansi
 
 # Copy Nginx configuration
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
