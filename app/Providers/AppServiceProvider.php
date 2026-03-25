@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use App\Models\User;
 
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production') || env('FORCE_HTTPS', false)) {
+            URL::forceScheme('https');
+        }
+
         $this->registerPluginLivewireComponents();
 
         Gate::define('view-admin', function (User $user) {
