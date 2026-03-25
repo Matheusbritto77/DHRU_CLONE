@@ -16,26 +16,30 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
             'type' => 'custom',
             'is_system' => true,
             'icon' => 'heroicon-o-credit-card',
-            'description' => 'Formulario principal para iniciar recarga via PIX.',
+            'description' => 'Formulario principal para iniciar recarga via gateways de pagamento.',
             'default_settings' => [
                 'title' => 'Recarga da conta',
                 'usd_label' => 'Valor em USD',
                 'total_label' => 'Total estimado em BRL',
                 'payment_label' => 'Metodo de pagamento',
-                'submit_text' => 'Gerar cobranca PIX',
+                'submit_text' => 'Ir para pagamento',
                 'exchange_rate' => '5.60',
                 'service_fee_rate' => '0.13',
                 'minimum_usd' => '10',
             ],
             'blade_template' => <<<'BLADE'
 <section class="px-4 sm:px-6 lg:px-10 py-6 lg:pl-[360px]">
+    @php
+        $paymentGateways = app(\App\Support\Payments\PaymentGatewayManager::class)->activeGateways();
+        $defaultGateway = $paymentGateways[0]['slug'] ?? 'payment-gerencianet-pix';
+    @endphp
     <div class="max-w-6xl mx-auto">
         <div class="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
             <div class="rounded-[32px] p-6 md:p-8 theme-panel">
                 <p class="text-[11px] uppercase tracking-[0.3em] theme-muted">{{ $settings['title'] }}</p>
                 <h2 class="mt-3 text-2xl font-semibold tracking-tight theme-text">Defina o valor e siga para o pagamento.</h2>
 
-                <form id="credit-form-builder" action="{{ route('process.pix') }}" method="POST" class="mt-8 space-y-6">
+                <form id="credit-form-builder" action="{{ route('payments.checkout', ['gateway' => $defaultGateway]) }}" method="POST" class="mt-8 space-y-6">
                     @csrf
                     <div>
                         <label for="credit-amount-usd" class="mb-2 block text-sm font-medium theme-muted">{{ $settings['usd_label'] }}</label>
@@ -50,7 +54,9 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
                     <div>
                         <label for="credit-payment-method" class="mb-2 block text-sm font-medium theme-muted">{{ $settings['payment_label'] }}</label>
                         <select id="credit-payment-method" name="payment_method" class="w-full rounded-[18px] px-4 py-3 text-sm outline-none transition theme-soft theme-text">
-                            <option value="pix">PIX</option>
+                            @foreach ($paymentGateways as $gateway)
+                                <option value="{{ $gateway['slug'] }}">{{ $gateway['label'] }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -91,6 +97,7 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
     const creditTotalBrl = document.getElementById('credit-total-brl');
     const creditAmountUsdHidden = document.getElementById('credit-amount-usd-hidden');
     const creditFormBuilder = document.getElementById('credit-form-builder');
+    const creditPaymentMethod = document.getElementById('credit-payment-method');
     const creditExchangeRate = {{ (float) $settings['exchange_rate'] }};
     const creditServiceFeeRate = {{ (float) $settings['service_fee_rate'] }};
     const creditMinimumUsd = {{ (float) $settings['minimum_usd'] }};
@@ -107,6 +114,10 @@ class AddCreditsFormPluginSeeder extends AbstractPluginSeeder
     }
 
     creditAmountUsd.addEventListener('input', calculateCreditTotal);
+    creditPaymentMethod.addEventListener('change', function () {
+        const gateway = creditPaymentMethod.value || '{{ $defaultGateway }}';
+        creditFormBuilder.action = `{{ url('/payments') }}/${gateway}/checkout`;
+    });
 
     creditFormBuilder.addEventListener('submit', function (event) {
         const amountUsd = parseFloat(creditAmountUsd.value || 0);

@@ -1,23 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\ServerController;
-
-
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IMEIController;
-use App\Http\Controllers\BinancePayController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\GerencianetPixController;
-use Gerencianet\Exception\GerencianetException;
-use Gerencianet\Gerencianet;
+use App\Http\Controllers\PaymentGatewayController;
+use App\Http\Controllers\PaymentGatewayWebhookController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\AddCreditsController;
-
-
 use Livewire\Livewire;
 
 
@@ -92,15 +84,19 @@ Route::get('/buscar-servicos-imei', [IMEIController::class, 'buscarServicosIMEI'
 
 
 
-Route::post('/processar-pagamento', [BinancePayController::class, 'depositarCredito'])->name('processarPagamento');
+Route::post('/payments/{gateway}/checkout', [PaymentGatewayController::class, 'checkout'])
+    ->middleware(['auth', 'verified'])
+    ->name('payments.checkout');
+
+Route::post('/webhooks/payments/{gateway}/reconcile', [PaymentGatewayWebhookController::class, 'reconcile'])
+    ->name('payments.reconcile.webhook');
+
+Route::post('/processar-pagamento', [PaymentGatewayController::class, 'checkout'])
+    ->middleware(['auth', 'verified'])
+    ->defaults('gateway', 'payment-binance-pay')
+    ->name('processarPagamento');
 
 Route::view('/pagamento', 'pagamento')->name('pagamento');
-
-Route::get('/account-info', [BinancePayController::class, 'getInfo'])->name('account.info');
-
-Route::get('/create-binance-order', [BinancePayController::class, 'createBinanceOrder'])->name('create.binance.order');
-
-
 
 // Exemplo de rota para a página de confirmação
 Route::get('/confirmacao-pagamento', function () {
@@ -143,10 +139,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 
 
-Route::post('/pix', [GerencianetPixController::class, 'generateQRCode'])->name('process.pix');
-Route::get('/pix/status', [GerencianetPixController::class, 'consultarPixRecebidosUltimos30Minutos']);
+Route::post('/pix', [PaymentGatewayController::class, 'checkout'])
+    ->middleware(['auth', 'verified'])
+    ->defaults('gateway', 'payment-gerencianet-pix')
+    ->name('process.pix');
+Route::match(['GET', 'POST'], '/pix/status', [PaymentGatewayWebhookController::class, 'reconcile'])
+    ->defaults('gateway', 'payment-gerencianet-pix')
+    ->name('process.pix.status');
 // routes/web.php
 // Define a rota que retorna diretamente a view
 Route::get('/add-credits', [AddCreditsController::class, 'index'])->name('add-credits');
-
-

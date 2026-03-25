@@ -2,34 +2,24 @@
 
 namespace App\Console\Commands;
 
+use App\Support\Payments\PaymentGatewayManager;
 use Illuminate\Console\Command;
-use App\Http\Controllers\GerencianetPixController;
 
 class ConsultarPixStatus extends Command
 {
     protected $signature = 'pix:consultar-status';
-    protected $description = 'Consulta o status dos PIX recebidos nos últimos 30 minutos';
+    protected $description = 'Consulta o status dos pagamentos PIX pendentes conforme a configuracao do plugin';
 
     public function __construct()
     {
         parent::__construct();
     }
 
-    public function handle()
+    public function handle(PaymentGatewayManager $manager)
     {
-        // Instancia o controlador
-        $controller = new GerencianetPixController();
+        $result = $manager->reconcile('payment-gerencianet-pix')['payment-gerencianet-pix'] ?? ['checked' => 0, 'updated' => 0];
+        $this->info("Gerencianet PIX reconciliado via plugin. checked={$result['checked']} updated={$result['updated']}");
 
-        // Chama o método diretamente
-        $response = $controller->consultarPixRecebidosUltimos30Minutos();
-
-        // Verifica se a resposta foi bem-sucedida
-        if ($response->getStatusCode() == 200) {
-            $this->info('Status dos PIX consultado com sucesso.');
-        } else {
-            $this->error('Erro ao consultar o status dos PIX.');
-        }
-
-        return 0;
+        return self::SUCCESS;
     }
 }

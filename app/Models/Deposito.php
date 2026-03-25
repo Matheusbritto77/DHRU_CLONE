@@ -24,8 +24,17 @@ class Deposito extends Model
      */
     protected $fillable = [
         'txid',
+        'gateway_slug',
+        'gateway_reference',
+        'gateway_payload',
         'valor',
         'user_id',
         'status',
+        'paid_at',
+    ];
+
+    protected $casts = [
+        'gateway_payload' => 'array',
+        'paid_at' => 'datetime',
     ];
 }

@@ -35,12 +35,16 @@ use Database\Seeders\Plugins\ImeiHistoryHelpPluginSeeder;
 use Database\Seeders\Plugins\ImeiHistoryHeroPluginSeeder;
 use Database\Seeders\Plugins\ImeiHistoryTablePluginSeeder;
 use Database\Seeders\Plugins\NavbarPluginSeeder;
+use Database\Seeders\Plugins\BinancePayGatewayPluginSeeder;
+use Database\Seeders\Plugins\GerencianetPixGatewayPluginSeeder;
+use Database\Seeders\Plugins\MercadoPagoGatewayPluginSeeder;
 use Database\Seeders\Plugins\ServerHistoryHelpPluginSeeder;
 use Database\Seeders\Plugins\ServerHistoryHeroPluginSeeder;
 use Database\Seeders\Plugins\ServerHistoryTablePluginSeeder;
 use Database\Seeders\Plugins\ServerServicesHelpPluginSeeder;
 use Database\Seeders\Plugins\ServerServicesHeroPluginSeeder;
 use Database\Seeders\Plugins\ServerServicesTablePluginSeeder;
+use Database\Seeders\Plugins\StripeGatewayPluginSeeder;
 use Database\Seeders\Plugins\TopbarPluginSeeder;
 use Illuminate\Database\Seeder;
 
@@ -80,6 +84,10 @@ class PluginSeeder extends Seeder
             AuthRegisterHeaderPluginSeeder::class,
             AuthRegisterFormPluginSeeder::class,
             AuthRegisterSupportPluginSeeder::class,
+            GerencianetPixGatewayPluginSeeder::class,
+            BinancePayGatewayPluginSeeder::class,
+            MercadoPagoGatewayPluginSeeder::class,
+            StripeGatewayPluginSeeder::class,
             DarkModeSeeder::class,
             WelcomePageSeeder::class,
             DashboardPageSeeder::class,
