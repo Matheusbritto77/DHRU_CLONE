@@ -11,6 +11,11 @@ class PageBlock extends Model
         'page_id', 'plugin_id', 'sort_order', 'is_visible', 'settings',
     ];
 
+    protected $attributes = [
+        'settings' => '[]',
+        'is_visible' => true,
+    ];
+
     protected $casts = [
         'settings'   => 'array',
         'is_visible' => 'boolean',

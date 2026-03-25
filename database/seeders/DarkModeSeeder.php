@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use App\Models\Plugin;
 use App\Models\Page;
 use App\Models\PageBlock;
@@ -11,10 +12,68 @@ class DarkModeSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Atualizar TOPBAR (já suporta via inline style) ──
-        // Sem mudança necessária, pois usa bg_color inline
+        // 1. Criar ou Atualizar o Plugin de Toggle usando DB para evitar problemas com Eloquent Events/Observers
+        DB::table('plugins')->updateOrInsert(
+            ['slug' => 'dark-mode-toggle'],
+            [
+                'name' => 'Dark Mode Toggle',
+                'description' => 'Botão minimalista Apple para alternar entre Dark e Light mode.',
+                'type' => 'custom',
+                'is_system' => true,
+                'is_active' => true,
+                'icon' => 'heroicon-o-moon',
+                'blade_template' => <<<'BLADE'
+<div class="fixed bottom-8 right-8 z-[100] fade-in">
+    <button id="theme-toggle" class="w-12 h-12 rounded-full bg-white/80 dark:bg-[#1d1d1f]/80 backdrop-blur-md border border-black/5 dark:border-white/10 shadow-2xl flex items-center justify-center text-[#1d1d1f] dark:text-gray-200 hover:scale-110 active:scale-95 transition-all duration-300 group">
+        <i id="theme-toggle-dark-icon" class="hidden fas fa-moon text-lg group-hover:text-[#0066cc]"></i>
+        <i id="theme-toggle-light-icon" class="hidden fas fa-sun text-lg group-hover:text-[#ff9500]"></i>
+    </button>
+</div>
 
-        // ── Atualizar NAVBAR com dark: ──
+<script>
+    (function() {
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (!themeToggleBtn) return;
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon?.classList.remove('hidden');
+                themeToggleDarkIcon?.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon?.classList.remove('hidden');
+                themeToggleLightIcon?.classList.add('hidden');
+            }
+        }
+
+        const storedTheme = localStorage.getItem('color-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(storedTheme === 'dark' || (!storedTheme && prefersDark));
+
+        themeToggleBtn.addEventListener('click', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('color-theme', newTheme);
+            applyTheme(!isDark);
+        });
+    })();
+</script>
+BLADE,
+                'admin_form_schema' => json_encode([
+                    ['name' => 'position', 'type' => 'text', 'label' => 'Posição (CSS)', 'default' => 'bottom-8 right-8'],
+                ]),
+                'default_settings' => json_encode([
+                    'position' => 'bottom-8 right-8',
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // 2. Atualizar templates dos outros plugins para suportar Dark Mode
         Plugin::where('slug', 'navbar')->update([
             'blade_template' => <<<'BLADE'
 <nav class="backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-50 transition-all duration-300 border-b bg-white/70 dark:bg-[#1d1d1f]/70 border-black/5 dark:border-white/10">
@@ -35,20 +94,6 @@ class DarkModeSeeder extends Seeder
 BLADE,
         ]);
 
-        // ── Atualizar CAROUSEL com dark: ──
-        Plugin::where('slug', 'carousel-banners')->update([
-            'blade_template' => <<<'BLADE'
-<section class="w-full relative overflow-hidden bg-[#f5f5f7] dark:bg-[#161617]">
-    <div class="plugin-carousel-track flex w-full transition-transform duration-700 ease-in-out" data-interval="{{ $settings['interval_ms'] }}">
-        @foreach($settings['images'] as $img)
-            <img src="{{ asset($img) }}" class="w-full h-auto object-contain flex-shrink-0" alt="Banner">
-        @endforeach
-    </div>
-</section>
-BLADE,
-        ]);
-
-        // ── Atualizar HERO com dark: ──
         Plugin::where('slug', 'hero-text')->update([
             'blade_template' => <<<'BLADE'
 <section class="pt-20 pb-16 px-4 text-center bg-[#f5f5f7] dark:bg-[#161617]">
@@ -64,7 +109,6 @@ BLADE,
 BLADE,
         ]);
 
-        // ── Atualizar FEATURES com dark: ──
         Plugin::where('slug', 'features-grid')->update([
             'blade_template' => <<<'BLADE'
 <section class="py-24 px-4 bg-white dark:bg-[#1d1d1f]">
@@ -87,7 +131,6 @@ BLADE,
 BLADE,
         ]);
 
-        // ── Atualizar FOOTER com dark: ──
         Plugin::where('slug', 'footer')->update([
             'blade_template' => <<<'BLADE'
 <footer class="bg-white dark:bg-[#1d1d1f] border-t border-gray-200 dark:border-gray-800 pt-16 pb-8 px-4">
@@ -119,14 +162,21 @@ BLADE,
 BLADE,
         ]);
 
-        // ── Vincular Dark Mode Toggle à página Welcome ──
+        // 3. Vincular Dark Mode Toggle à página Welcome
         $darkPlugin = Plugin::where('slug', 'dark-mode-toggle')->first();
         $welcomePage = Page::where('slug', 'welcome')->first();
 
         if ($darkPlugin && $welcomePage) {
-            PageBlock::updateOrCreate(
+            // Garantir que o bloco exista, usando DB para evitar erros de settings
+            DB::table('page_blocks')->updateOrInsert(
                 ['page_id' => $welcomePage->id, 'plugin_id' => $darkPlugin->id],
-                ['sort_order' => 99, 'is_visible' => true]
+                [
+                    'sort_order' => 99, 
+                    'is_visible' => true, 
+                    'settings' => '[]',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
             );
         }
 

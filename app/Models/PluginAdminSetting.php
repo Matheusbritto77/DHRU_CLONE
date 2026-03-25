@@ -12,6 +12,10 @@ class PluginAdminSetting extends Model
         'settings',
     ];
 
+    protected $attributes = [
+        'settings' => '[]',
+    ];
+
     protected $casts = [
         'settings' => 'array',
     ];
