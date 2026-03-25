@@ -13,6 +13,7 @@ FROM php:8.4-fpm-alpine
 ARG USER=www
 ARG GROUP=www
 RUN addgroup -S $GROUP && adduser -S $USER -G $GROUP
+ENV APP_USER=$USER APP_GROUP=$GROUP
 
 WORKDIR /var/www/html
 
@@ -75,6 +76,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progre
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 # Copy Supervisor configuration
 COPY ./docker/supervisord.conf /etc/supervisord.conf
+COPY ./docker/entrypoint.sh /usr/local/bin/app-entrypoint
 
 # Set Permissions
 RUN mkdir -p /var/www/html/storage/framework/cache/data \
@@ -84,10 +86,11 @@ RUN mkdir -p /var/www/html/storage/framework/cache/data \
     && mkdir -p /var/www/html/storage/logs \
     && chown -R $USER:$GROUP /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod +x /usr/local/bin/app-entrypoint \
     && chmod 1777 /tmp
 
 # Expose port
 EXPOSE 80
 
-# Start with supervisor to handle both Nginx and PHP-FPM
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Start with runtime permission fix + supervisor
+CMD ["/usr/local/bin/app-entrypoint"]
