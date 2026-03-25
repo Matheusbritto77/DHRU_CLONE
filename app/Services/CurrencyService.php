@@ -3,50 +3,75 @@
 namespace App\Services;
 
 use App\Models\Currency;
+use App\Support\CurrencyCatalogService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class CurrencyService
 {
-    /**
-     * Synchronize all active non-base currencies with the external API.
-     */
     public function syncAll(): void
     {
-        $base = Currency::where('is_base', true)->first();
-        if (!$base) {
-            Log::error('Currency Sync: Base currency not found.');
-            return;
-        }
-
         try {
-            // Free API (exchange-api)
-            $response = Http::get("https://api.exchangerate-api.com/v4/latest/{$base->code}");
-            
-            if (!$response->successful()) {
-                Log::error('Currency Sync: API call failed.', ['status' => $response->status()]);
-                return;
+            $baseCode = strtoupper(config('app.currency_base', 'USD'));
+            $catalog = CurrencyCatalogService::getCurrencies();
+            $rates = CurrencyCatalogService::getRates($baseCode);
+
+            if (! isset($catalog[$baseCode])) {
+                $catalog[$baseCode] = 'United States Dollar';
             }
 
-            $rates = $response->json()['rates'] ?? [];
-            $currencies = Currency::where('is_base', false)->where('is_active', true)->get();
+            Currency::query()->update(['is_base' => false]);
 
-            foreach ($currencies as $currency) {
-                if (isset($rates[$currency->code])) {
-                    $newRate = (float) $rates[$currency->code];
-                    
-                    if ($currency->exchange_rate != $newRate) {
-                        $currency->update(['exchange_rate' => $newRate]);
-                        // Clear specific currency cache
-                        Cache::forget("currency_data_{$currency->code}");
-                    }
-                }
+            Currency::updateOrCreate(
+                ['code' => $baseCode],
+                [
+                    'name' => $catalog[$baseCode] ?? $baseCode,
+                    'symbol' => $this->resolveSymbol($baseCode),
+                    'exchange_rate' => 1.0,
+                    'is_base' => true,
+                    'is_active' => true,
+                ]
+            );
+
+            foreach ($catalog as $code => $name) {
+                $code = strtoupper($code);
+
+                Currency::updateOrCreate(
+                    ['code' => $code],
+                    [
+                        'name' => $name,
+                        'symbol' => $this->resolveSymbol($code),
+                        'exchange_rate' => $code === $baseCode ? 1.0 : (float) ($rates[$code] ?? 1.0),
+                        'is_base' => $code === $baseCode,
+                        'is_active' => true,
+                    ]
+                );
+
+                Cache::forget("currency_data_{$code}");
             }
-            
-            Log::info('Currency Sync: Success. All active rates updated.');
+
+            Log::info('Currency Sync: catalog and exchange rates updated successfully.', [
+                'base' => $baseCode,
+                'currencies' => count($catalog),
+            ]);
         } catch (\Exception $e) {
             Log::error('Currency Sync Exception: ' . $e->getMessage());
         }
+    }
+
+    protected function resolveSymbol(string $code): string
+    {
+        return [
+            'USD' => '$',
+            'BRL' => 'R$',
+            'EUR' => 'EUR',
+            'GBP' => 'GBP',
+            'JPY' => 'JPY',
+            'AUD' => 'AUD',
+            'CAD' => 'CAD',
+            'CHF' => 'CHF',
+            'CNY' => 'CNY',
+        ][$code] ?? $code;
     }
 }
