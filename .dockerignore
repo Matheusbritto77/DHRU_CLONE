@@ -5,7 +5,7 @@
 .vscode
 Dockerfile
 docker-compose.yml
-docker/
+!docker/
 node_modules
 vendor
 storage/framework/cache/data/*
