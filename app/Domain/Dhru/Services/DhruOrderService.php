@@ -21,6 +21,7 @@ class DhruOrderService
         return $this->client->request($catalogService->provider, 'placeimeiorder', [
             'IMEI' => $serialNumber,
             'ID' => $catalogService->external_service_id,
+            'CALLBACK_URL' => rtrim(config('app.url'), '/') . '/api/dhru/webhook',
             'CUSTOMFIELD' => base64_encode(json_encode([
                 'SERIAL_NUMBER' => $serialNumber,
                 'SN' => $serialNumber,
@@ -36,6 +37,7 @@ class DhruOrderService
             'IMEI' => '',
             'Qnt' => $quantity ?: 0,
             'ID' => $catalogService->external_service_id,
+            'CALLBACK_URL' => rtrim(config('app.url'), '/') . '/api/dhru/webhook',
             'CUSTOMFIELD' => base64_encode(json_encode($customFields)),
         ]);
     }
